@@ -1,0 +1,99 @@
+# Cloud & DevOps Standards Assistant
+
+A production-grade GenAI platform on Azure, built with the native Microsoft Foundry stack and Terraform. It answers questions from a corpus of Azure Well-Architected Framework, CIS Benchmarks, NIST, and Terraform best-practice documents, cites the exact source, and flags when a question falls outside its knowledge.
+
+This is a portfolio build demonstrating an end-to-end Azure GenAI platform: infrastructure as code, retrieval, agents, tools, observability/evaluation, safety, and cost optimisation — all on Microsoft Foundry.
+
+Full build plan and progress: see the [project tracker](#) (Notion — link privately, not public in this README).
+
+## Status
+
+🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr) for design decisions made so far.
+
+## The Azure GenAI Stack
+
+| Layer | Service |
+|---|---|
+| Platform | Microsoft Foundry (formerly Azure AI Foundry) |
+| Foundation models | Foundry model catalog |
+| Retrieval / RAG | Azure AI Search (vector + hybrid), Foundry IQ |
+| Agents | Foundry Agent Service |
+| Tools | MCP tools (Foundry catalog), Azure Functions |
+| Guardrails | Azure AI Content Safety, Foundry Control Plane safety |
+| Observability | Foundry Control Plane (OpenTelemetry), Application Insights |
+| Evaluation | Foundry evaluators (groundedness, relevance, safety) |
+| Compute | Azure Container Apps (see [ADR-0001](docs/adr/0001-compute-platform.md)) |
+| Secrets | Azure Key Vault |
+| IaC | Terraform |
+
+## Corpus
+
+Public, non-confidential standards documents (see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md#corpus-licensing) for licensing constraints — especially CIS redistribution limits):
+
+- Azure Well-Architected Framework
+- CIS Benchmarks for Azure
+- NIST Cybersecurity Framework / relevant NIST 800-53 controls
+- HashiCorp Terraform style guide / best-practice docs
+
+## Repository structure
+
+```
+cloud-standards-assistant/
+├── terraform/          # IaC: modules + dev/staging/prod envs
+├── search/             # AI Search index definition + ingestion pipeline
+├── agents/             # Foundry agent definitions
+├── tools/              # Agent tool configs (AI Search, Azure Function, MCP/external API)
+├── safety/             # Content Safety config, red-team notes
+├── eval/
+│   └── golden_set.jsonl # Golden eval set (50+ Q&A pairs)
+├── serving/            # Deployment manifests (Container Apps)
+├── scripts/            # Repo bootstrap (create GitHub repo, branch protection)
+├── docs/
+│   ├── INFRASTRUCTURE.md
+│   ├── ARCHITECTURE.md
+│   └── adr/            # Architecture decision records
+└── README.md
+```
+
+## Prerequisites
+
+- Azure subscription with Microsoft Foundry access confirmed (this is the #1 first-time blocker — verify before anything else)
+- Azure CLI (`az`), authenticated
+- Terraform >= 1.7
+- An Azure Storage account + container for Terraform remote state (bootstrap this first, see `terraform/README.md` once added)
+- A budget alert configured on the subscription before any resources are deployed
+
+## Quick start
+
+> Fill in once Phase 1 (Infrastructure as Code) lands. Placeholder for now:
+
+```bash
+cd terraform/envs/dev
+terraform init
+terraform plan
+terraform apply
+```
+
+## Agent flow
+
+> To be documented in `docs/ARCHITECTURE.md` once Phase 3 (Agents) lands — how the agent decides to retrieve vs. call a tool vs. defer.
+
+## Evaluation
+
+> To be documented once Phase 5 lands — the golden set, metrics (groundedness/relevance/safety), and results with failure analysis.
+
+## Cost
+
+> To be documented once Phase 6 lands — cost per interaction, and the effect of model tiering + prompt caching.
+
+## Safety
+
+> To be documented once Phase 6 lands — Content Safety configuration and what it catches (including a red-team log of prompt-injection attempts).
+
+## Trade-offs and lessons learned
+
+> To be filled in at the end of the build.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

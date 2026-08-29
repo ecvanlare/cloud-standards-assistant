@@ -1,0 +1,41 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+
+jobs:
+  fmt-validate-plan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, staging, prod]
+    defaults:
+      run:
+        working-directory: terraform/envs/${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        run: terraform fmt -check -recursive ../../
+
+      - name: terraform init
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        run: terraform validate
+
+      # terraform plan requires Azure credentials — wire up an OIDC federated
+      # credential (azure/login@v2) and AZURE_CLIENT_ID / TENANT_ID / SUBSCRIPTION_ID
+      # secrets before enabling this step. Left commented until Phase 1 lands.
+      # - name: terraform plan
+      #   run: terraform plan -input=false
