@@ -32,14 +32,10 @@ Corpus blobs in the private storage `corpus` container are indexed by Azure AI S
 4. **Store** — Index projections write child chunks into `corpus-default` or `corpus-tuned` with citation fields: `framework`, `section`, `title`, `source_path`, `content`, `contentVector`.
 5. **Retrieve** — Hybrid query (keyword `search` + `vectorQueries` text-to-vector via the index vectorizer).
 
-All four sources are fetched from public URLs by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-sources) and [ADR-0002](adr/0002-corpus-source-cis-to-asb.md). Foundry IQ managed grounding is deferred past Phase 2.
+All four sources are fetched from public URLs by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-sources). Foundry IQ managed grounding is deferred past Phase 2.
 
 Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md).
 
 ## Environments
 
 Three environments (`dev`, `staging`, `prod`) from the same Terraform modules, see `terraform/`.
-
-## Decisions
-
-See [`docs/adr/`](adr) for architecture decision records: [ADR-0001: Container Apps over AKS](adr/0001-compute-platform.md), [ADR-0002: Azure Security Benchmark over CIS Benchmarks](adr/0002-corpus-source-cis-to-asb.md).

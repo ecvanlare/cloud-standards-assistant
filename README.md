@@ -4,7 +4,7 @@ A production-grade GenAI platform on Azure, built with the native Microsoft Foun
 
 ## Status
 
-🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr) for design decisions made so far.
+🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current design.
 
 ## The Azure GenAI Stack
 
@@ -18,7 +18,7 @@ A production-grade GenAI platform on Azure, built with the native Microsoft Foun
 | Guardrails | Azure AI Content Safety, Foundry Control Plane safety |
 | Observability | Foundry Control Plane (OpenTelemetry), Application Insights |
 | Evaluation | Foundry evaluators (groundedness, relevance, safety) |
-| Compute | Azure Container Apps (see [ADR-0001](docs/adr/0001-compute-platform.md)) |
+| Compute | Azure Container Apps |
 | Secrets | Azure Key Vault |
 | IaC | Terraform |
 
@@ -45,8 +45,7 @@ cloud-standards-assistant/
 ├── serving/            # Container Apps manifests
 ├── docs/
 │   ├── INFRASTRUCTURE.md
-│   ├── ARCHITECTURE.md
-│   └── adr/
+│   └── ARCHITECTURE.md
 └── README.md
 ```
 

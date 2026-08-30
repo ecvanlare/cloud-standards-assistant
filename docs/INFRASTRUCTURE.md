@@ -67,13 +67,11 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
 - Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents)
 
-AKS is **not** provisioned (see [ADR-0001](adr/0001-compute-platform.md)).
-
 Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
 
 ## Corpus sources
 
-All four sources are public and auto-fetched by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh) from URLs in [`search/corpus-manifest.json`](../search/corpus-manifest.json) (see [ADR-0002](adr/0002-corpus-source-cis-to-asb.md)):
+All four sources are public and auto-fetched by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh) from URLs in [`search/corpus-manifest.json`](../search/corpus-manifest.json):
 
 - Azure Well-Architected Framework
 - Azure Security Benchmark (CC BY on Microsoft Learn)
