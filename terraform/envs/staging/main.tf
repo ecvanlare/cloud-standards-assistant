@@ -82,5 +82,6 @@ module "identity" {
   key_vault_id         = module.key_vault.id
   cognitive_account_id = module.foundry.account_id
   search_service_id    = module.ai_search.id
+  search_principal_id  = module.ai_search.principal_id
   tags                 = local.tags
 }

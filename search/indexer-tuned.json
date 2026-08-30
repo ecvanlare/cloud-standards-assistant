@@ -1,0 +1,14 @@
+{
+  "name": "corpus-indexer-tuned",
+  "dataSourceName": "corpus-blobs",
+  "skillsetName": "corpus-skillset-tuned",
+  "targetIndexName": "corpus-tuned",
+  "parameters": {
+    "configuration": {
+      "dataToExtract": "contentAndMetadata",
+      "parsingMode": "default",
+      "indexedFileNameExtensions": ".md,.txt,.html,.pdf",
+      "excludedFileNameExtensions": ".json"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "description": "Public corpus sources for AZP-6. Fetch with search/scripts/fetch-corpus.sh. CIS is not listed — place licensed files under corpus/cis/ locally (gitignored).",
+  "documents": [
+    {
+      "id": "waf-reliability-zones",
+      "framework": "Azure Well-Architected Framework",
+      "section": "Reliability - Availability zones",
+      "title": "Use availability zones",
+      "relative_path": "waf/reliability-availability-zones.md",
+      "source_url": "https://learn.microsoft.com/azure/well-architected/reliability/regions-availability-zones"
+    },
+    {
+      "id": "waf-reliability-overview",
+      "framework": "Azure Well-Architected Framework",
+      "section": "Reliability - Overview",
+      "title": "Reliability design principles",
+      "relative_path": "waf/reliability-overview.md",
+      "source_url": "https://learn.microsoft.com/azure/well-architected/reliability/principles"
+    },
+    {
+      "id": "nist-csf-identify",
+      "framework": "NIST Cybersecurity Framework",
+      "section": "Identify",
+      "title": "CSF 2.0 Identify function",
+      "relative_path": "nist/csf-identify.md",
+      "source_url": "https://www.nist.gov/cyberframework"
+    },
+    {
+      "id": "terraform-remote-state",
+      "framework": "HashiCorp Terraform",
+      "section": "State - Remote backends",
+      "title": "Backend configuration",
+      "relative_path": "terraform/backend-configuration.md",
+      "source_url": "https://developer.hashicorp.com/terraform/language/backend"
+    },
+    {
+      "id": "terraform-style",
+      "framework": "HashiCorp Terraform",
+      "section": "Style guide",
+      "title": "Terraform style guide",
+      "relative_path": "terraform/style-guide.md",
+      "source_url": "https://developer.hashicorp.com/terraform/language/style"
+    }
+  ]
+}

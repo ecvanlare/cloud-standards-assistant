@@ -27,6 +27,11 @@ variable "search_service_id" {
   type = string
 }
 
+variable "search_principal_id" {
+  type        = string
+  description = "System-assigned identity of the AI Search service (indexer + embedding skill)."
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

@@ -24,7 +24,7 @@ A production-grade GenAI platform on Azure, built with the native Microsoft Foun
 
 ## Corpus
 
-Public, non-confidential standards documents:
+Public, non-confidential standards documents (see [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md#corpus-licensing) for CIS licensing):
 
 - Azure Well-Architected Framework
 - CIS Benchmarks for Azure

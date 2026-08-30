@@ -1,0 +1,87 @@
+{
+  "name": "corpus-skillset-default",
+  "description": "Default Text Split page length/overlap plus Foundry embedding.",
+  "skills": [
+    {
+      "@odata.type": "#Microsoft.Skills.Text.SplitSkill",
+      "name": "split-default",
+      "description": "Platform-default style pages (2000 / 500).",
+      "context": "/document",
+      "defaultLanguageCode": "en",
+      "textSplitMode": "pages",
+      "maximumPageLength": 2000,
+      "pageOverlapLength": 500,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "textItems",
+          "targetName": "pages"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
+      "name": "embed-default",
+      "context": "/document/pages/*",
+      "resourceUri": "__FOUNDRY_ENDPOINT__",
+      "deploymentId": "__EMBEDDING_DEPLOYMENT__",
+      "modelName": "text-embedding-3-small",
+      "dimensions": 1536,
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/pages/*"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "embedding",
+          "targetName": "contentVector"
+        }
+      ]
+    }
+  ],
+  "indexProjections": {
+    "selectors": [
+      {
+        "targetIndexName": "corpus-default",
+        "parentKeyFieldName": "parent_id",
+        "sourceContext": "/document/pages/*",
+        "mappings": [
+          {
+            "name": "content",
+            "source": "/document/pages/*"
+          },
+          {
+            "name": "contentVector",
+            "source": "/document/pages/*/contentVector"
+          },
+          {
+            "name": "framework",
+            "source": "/document/citeframework"
+          },
+          {
+            "name": "section",
+            "source": "/document/citesection"
+          },
+          {
+            "name": "title",
+            "source": "/document/citetitle"
+          },
+          {
+            "name": "source_path",
+            "source": "/document/metadata_storage_path"
+          }
+        ]
+      }
+    ],
+    "parameters": {
+      "projectionMode": "skipIndexingParentDocuments"
+    }
+  }
+}
