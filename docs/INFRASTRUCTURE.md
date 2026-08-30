@@ -64,8 +64,20 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - Model deployments: `gpt-5-mini`, `text-embedding-3-small`
 - Container Apps environment (empty — apps in Phase 7)
 - User-assigned managed identity + RBAC to storage, KV, Foundry, Search
+- Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
+- Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents)
 
 AKS is **not** provisioned (see [ADR-0001](adr/0001-compute-platform.md)).
+
+Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
+
+## Corpus licensing
+
+CIS Benchmarks are proprietary. Do not invent CIS control text from training data, and do not commit CIS Benchmark PDFs or text to this public repo.
+
+Ingest CIS only from a local, gitignored path (`corpus/cis/`) under a valid CIS license. Public sources (Well-Architected Framework, NIST, Terraform docs) may live in the corpus container; CIS stays off git and is uploaded to the private storage container at ingest time.
+
+Fill CIS eval `ground_truth` only from ingested, cited chunks — never from memory.
 
 ## Remote state
 

@@ -1,0 +1,10 @@
+{
+  "name": "corpus-blobs",
+  "type": "azureblob",
+  "credentials": {
+    "connectionString": "ResourceId=__STORAGE_RESOURCE_ID__;"
+  },
+  "container": {
+    "name": "__CORPUS_CONTAINER__"
+  }
+}

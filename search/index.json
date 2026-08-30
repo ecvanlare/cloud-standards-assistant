@@ -1,0 +1,93 @@
+{
+  "name": "__INDEX_NAME__",
+  "fields": [
+    {
+      "name": "chunk_id",
+      "type": "Edm.String",
+      "key": true,
+      "filterable": true,
+      "sortable": true,
+      "searchable": true,
+      "analyzer": "keyword"
+    },
+    {
+      "name": "parent_id",
+      "type": "Edm.String",
+      "filterable": true,
+      "retrievable": true
+    },
+    {
+      "name": "content",
+      "type": "Edm.String",
+      "searchable": true,
+      "retrievable": true
+    },
+    {
+      "name": "contentVector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "retrievable": false,
+      "dimensions": 1536,
+      "vectorSearchProfile": "hnsw-profile"
+    },
+    {
+      "name": "framework",
+      "type": "Edm.String",
+      "filterable": true,
+      "facetable": true,
+      "retrievable": true,
+      "searchable": true
+    },
+    {
+      "name": "section",
+      "type": "Edm.String",
+      "filterable": true,
+      "retrievable": true,
+      "searchable": true
+    },
+    {
+      "name": "title",
+      "type": "Edm.String",
+      "retrievable": true,
+      "searchable": true
+    },
+    {
+      "name": "source_path",
+      "type": "Edm.String",
+      "filterable": true,
+      "retrievable": true
+    }
+  ],
+  "vectorSearch": {
+    "algorithms": [
+      {
+        "name": "hnsw-algo",
+        "kind": "hnsw",
+        "hnswParameters": {
+          "metric": "cosine",
+          "m": 4,
+          "efConstruction": 400,
+          "efSearch": 500
+        }
+      }
+    ],
+    "profiles": [
+      {
+        "name": "hnsw-profile",
+        "algorithm": "hnsw-algo",
+        "vectorizer": "foundry-embedding"
+      }
+    ],
+    "vectorizers": [
+      {
+        "name": "foundry-embedding",
+        "kind": "azureOpenAI",
+        "azureOpenAIParameters": {
+          "resourceUri": "__FOUNDRY_ENDPOINT__",
+          "deploymentId": "__EMBEDDING_DEPLOYMENT__",
+          "modelName": "text-embedding-3-small"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "corpus-indexer-default",
+  "dataSourceName": "corpus-blobs",
+  "skillsetName": "corpus-skillset-default",
+  "targetIndexName": "corpus-default",
+  "parameters": {
+    "configuration": {
+      "dataToExtract": "contentAndMetadata",
+      "parsingMode": "default",
+      "indexedFileNameExtensions": ".md,.txt,.html,.pdf",
+      "excludedFileNameExtensions": ".json"
+    }
+  }
+}

@@ -24,7 +24,17 @@ flowchart LR
 
 ## Data flow / retrieval
 
-> TODO once Phase 2 lands: chunking strategy, embedding model, hybrid search config.
+Corpus blobs in the private storage `corpus` container are indexed by Azure AI Search.
+
+1. **Ingest** — Indexer reads blobs (Search system-assigned identity).
+2. **Chunk** — Text Split skill (`skillset-default`: 2000/500 pages; `skillset-tuned`: 800/150 for numbered controls and nested sections).
+3. **Embed** — Azure OpenAI Embedding skill calls Foundry deployment `text-embedding-3-small` (1536 dimensions) with the Search managed identity.
+4. **Store** — Index projections write child chunks into `corpus-default` or `corpus-tuned` with citation fields: `framework`, `section`, `title`, `source_path`, `content`, `contentVector`.
+5. **Retrieve** — Hybrid query (keyword `search` + `vectorQueries` text-to-vector via the index vectorizer).
+
+CIS Benchmarks are ingested only from local `corpus/cis/` (gitignored); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-licensing). Foundry IQ managed grounding is deferred past Phase 2.
+
+Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md).
 
 ## Environments
 
