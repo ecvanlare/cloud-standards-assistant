@@ -71,13 +71,16 @@ AKS is **not** provisioned (see [ADR-0001](adr/0001-compute-platform.md)).
 
 Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
 
-## Corpus licensing
+## Corpus sources
 
-CIS Benchmarks are proprietary. Do not invent CIS control text from training data, and do not commit CIS Benchmark PDFs or text to this public repo.
+All four sources are public and auto-fetched by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh) from URLs in [`search/corpus-manifest.json`](../search/corpus-manifest.json) (see [ADR-0002](adr/0002-corpus-source-cis-to-asb.md)):
 
-Ingest CIS only from a local, gitignored path (`corpus/cis/`) under a valid CIS license. Public sources (Well-Architected Framework, NIST, Terraform docs) may live in the corpus container; CIS stays off git and is uploaded to the private storage container at ingest time.
+- Azure Well-Architected Framework
+- Azure Security Benchmark (CC BY on Microsoft Learn)
+- NIST Cybersecurity Framework / NIST 800-53
+- HashiCorp Terraform best-practice docs
 
-Fill CIS eval `ground_truth` only from ingested, cited chunks — never from memory.
+No gated PDFs and no manual download step. Fill eval `ground_truth` for `PLACEHOLDER` rows only from ingested, cited chunks — never from memory.
 
 ## Remote state
 

@@ -1,5 +1,5 @@
 {
-  "description": "Public corpus sources for AZP-6. Fetch with search/scripts/fetch-corpus.sh. CIS is not listed — place licensed files under corpus/cis/ locally (gitignored).",
+  "description": "Public corpus sources. Fetch with search/scripts/fetch-corpus.sh. All four sources are open URLs (WAF, Azure Security Benchmark, NIST, Terraform).",
   "documents": [
     {
       "id": "waf-reliability-zones",
@@ -16,6 +16,22 @@
       "title": "Reliability design principles",
       "relative_path": "waf/reliability-overview.md",
       "source_url": "https://learn.microsoft.com/azure/well-architected/reliability/principles"
+    },
+    {
+      "id": "asb-introduction",
+      "framework": "Azure Security Benchmark",
+      "section": "Overview",
+      "title": "Microsoft cloud security benchmark introduction",
+      "relative_path": "asb/introduction.md",
+      "source_url": "https://learn.microsoft.com/security/benchmark/azure/introduction"
+    },
+    {
+      "id": "asb-storage-baseline",
+      "framework": "Azure Security Benchmark",
+      "section": "Network security - Storage",
+      "title": "Azure security baseline for Storage",
+      "relative_path": "asb/storage-security-baseline.md",
+      "source_url": "https://learn.microsoft.com/security/benchmark/azure/baselines/storage-security-baseline"
     },
     {
       "id": "nist-csf-identify",

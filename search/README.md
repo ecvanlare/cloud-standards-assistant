@@ -11,7 +11,7 @@ Index definitions, blob datasource, skillsets (chunk + embed), and hybrid query 
 | `skillset-default.json` | Split 2000/500 + `text-embedding-3-small` |
 | `skillset-tuned.json` | Split 800/150 (better for numbered controls / nested sections) |
 | `indexer-*.json` | Indexers projecting chunks into `corpus-default` / `corpus-tuned` |
-| `corpus-manifest.json` | Public source list (no CIS) |
+| `corpus-manifest.json` | Public source list (WAF, Azure Security Benchmark, NIST, Terraform) |
 | `scripts/` | Fetch, upload, deploy, run indexers, example hybrid query |
 | `CHUNKING.md` | Default vs tuned retrieval notes |
 | `examples/` | Cited retrieval sample |
@@ -32,8 +32,6 @@ Index definitions, blob datasource, skillsets (chunk + embed), and hybrid query 
 ./search/scripts/run-indexers.sh
 ./search/scripts/query-example.sh
 ```
-
-Optional: drop licensed CIS PDFs under `corpus/cis/` before upload (gitignored).
 
 ## Citations
 

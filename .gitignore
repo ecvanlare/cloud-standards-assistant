@@ -48,10 +48,8 @@ eval/results/
 traces/
 *.log
 
-# Licensed CIS Benchmarks (do not commit)
-corpus/cis/
-
 # Regenerable public corpus downloads (manifest is under search/)
 corpus/waf/
+corpus/asb/
 corpus/nist/
 corpus/terraform/

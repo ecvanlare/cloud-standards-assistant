@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Download public corpus pages listed in search/corpus-manifest.json into ./corpus.
-# Does not fetch CIS. Place licensed CIS files under corpus/cis/ yourself.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,7 +10,7 @@ require_cmd curl
 require_cmd jq
 require_cmd python3
 
-mkdir -p "${CORPUS_DIR}"/{waf,nist,terraform,cis}
+mkdir -p "${CORPUS_DIR}"/{waf,asb,nist,terraform}
 
 manifest="${SEARCH_DIR}/corpus-manifest.json"
 count="$(jq '.documents | length' "${manifest}")"
@@ -60,4 +59,4 @@ PY
   rm -f "${tmp}"
 done
 
-echo "Done. CIS (if any) belongs in ${CORPUS_DIR}/cis/ and stays gitignored."
+echo "Done. Fetched documents are under ${CORPUS_DIR}/ (waf, asb, nist, terraform)."

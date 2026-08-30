@@ -73,11 +73,4 @@ for i in $(seq 0 $((count - 1))); do
     "$(jq -r ".documents[$i].title" "${manifest}")"
 done
 
-if [[ -d "${CORPUS_DIR}/cis" ]]; then
-  while IFS= read -r -d '' file; do
-    rel="cis/$(basename "${file}")"
-    upload_one "${file}" "${rel}" "CIS_Benchmarks_for_Azure" "$(basename "${file}")" "$(basename "${file}")"
-  done < <(find "${CORPUS_DIR}/cis" -type f \( -name '*.pdf' -o -name '*.md' -o -name '*.txt' -o -name '*.html' \) -print0 2>/dev/null || true)
-fi
-
 echo "Upload complete to ${STORAGE_ACCOUNT}/${CORPUS_CONTAINER}"
