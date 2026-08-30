@@ -53,3 +53,6 @@ corpus/waf/
 corpus/asb/
 corpus/nist/
 corpus/terraform/
+
+# Agent deploy metadata (local)
+agents/.last-deploy.json

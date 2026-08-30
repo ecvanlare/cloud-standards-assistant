@@ -18,12 +18,36 @@
       "source_url": "https://learn.microsoft.com/azure/well-architected/reliability/principles"
     },
     {
+      "id": "waf-security-segmentation",
+      "framework": "Azure Well-Architected Framework",
+      "section": "Security - Segmentation",
+      "title": "Architecture strategies for segmentation",
+      "relative_path": "waf/security-segmentation.md",
+      "source_url": "https://learn.microsoft.com/azure/well-architected/security/segmentation"
+    },
+    {
+      "id": "waf-security-networking",
+      "framework": "Azure Well-Architected Framework",
+      "section": "Security - Networking",
+      "title": "Networking and connectivity",
+      "relative_path": "waf/security-networking.md",
+      "source_url": "https://learn.microsoft.com/azure/well-architected/security/networking"
+    },
+    {
       "id": "asb-introduction",
       "framework": "Azure Security Benchmark",
       "section": "Overview",
       "title": "Microsoft cloud security benchmark introduction",
       "relative_path": "asb/introduction.md",
       "source_url": "https://learn.microsoft.com/security/benchmark/azure/introduction"
+    },
+    {
+      "id": "asb-network-security",
+      "framework": "Azure Security Benchmark",
+      "section": "Network security - NS-1",
+      "title": "Establish network segmentation boundaries",
+      "relative_path": "asb/mcsb-network-security.md",
+      "source_url": "https://learn.microsoft.com/security/benchmark/azure/mcsb-network-security"
     },
     {
       "id": "asb-storage-baseline",

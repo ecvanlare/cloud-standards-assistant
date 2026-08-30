@@ -66,6 +66,7 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - User-assigned managed identity + RBAC to storage, KV, Foundry, Search
 - Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
 - Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents)
+- Foundry project system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
 
 Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
 

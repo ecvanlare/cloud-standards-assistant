@@ -32,6 +32,16 @@ variable "search_principal_id" {
   description = "System-assigned identity of the AI Search service (indexer + embedding skill)."
 }
 
+variable "foundry_project_principal_id" {
+  type        = string
+  description = "System-assigned identity of the Foundry project (Azure AI Search agent tool)."
+}
+
+variable "foundry_account_principal_id" {
+  type        = string
+  description = "System-assigned identity of the Foundry AIServices account (Azure AI Search agent tool)."
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

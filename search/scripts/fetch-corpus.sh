@@ -25,7 +25,7 @@ for i in $(seq 0 $((count - 1))); do
   mkdir -p "$(dirname "${out}")"
   echo "Fetching ${url} -> ${out}"
   tmp="$(mktemp)"
-  if ! curl -fsSL -A "cloud-standards-assistant-corpus-fetch/1.0" -o "${tmp}" "${url}"; then
+  if ! curl -fsSL -A "Mozilla/5.0 (compatible; cloud-standards-assistant-corpus-fetch/1.0)" -o "${tmp}" "${url}"; then
     echo "WARN: fetch failed for ${url}; leaving any existing file" >&2
     rm -f "${tmp}"
     continue
