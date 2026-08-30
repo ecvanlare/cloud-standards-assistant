@@ -1,0 +1,34 @@
+variable "name" {
+  type        = string
+  description = "User-assigned managed identity name."
+}
+
+variable "location" {
+  type = string
+}
+
+variable "resource_group_name" {
+  type = string
+}
+
+variable "storage_account_id" {
+  type = string
+}
+
+variable "key_vault_id" {
+  type = string
+}
+
+variable "cognitive_account_id" {
+  type = string
+}
+
+variable "search_service_id" {
+  type = string
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+
