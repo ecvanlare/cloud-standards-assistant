@@ -1,0 +1,17 @@
+{
+  "name": "Cloud & DevOps Standards Assistant",
+  "agent_name": "cloud-devops-standards-assistant",
+  "model": "gpt-5-mini",
+  "instructions_file": "instructions.md",
+  "description": "Answers cloud and DevOps standards questions from the hybrid corpus with citations, or defers when outside knowledge.",
+  "grounding": {
+    "tool": "azure_ai_search",
+    "index_name": "corpus-tuned",
+    "query_type": "vector_simple_hybrid",
+    "top_k": 5,
+    "connection_name": "csa-ai-search"
+  },
+  "conversation": {
+    "state": "foundry_conversations"
+  }
+}

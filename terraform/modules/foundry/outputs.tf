@@ -18,6 +18,10 @@ output "project_name" {
   value = azurerm_cognitive_account_project.this.name
 }
 
+output "project_endpoint" {
+  value = "https://${azurerm_cognitive_account.this.name}.services.ai.azure.com/api/projects/${azurerm_cognitive_account_project.this.name}"
+}
+
 output "account_principal_id" {
   value = azurerm_cognitive_account.this.identity[0].principal_id
 }

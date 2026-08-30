@@ -75,13 +75,15 @@ module "container_apps_env" {
 module "identity" {
   source = "../../modules/identity"
 
-  name                 = local.names.id
-  location             = module.resource_group.location
-  resource_group_name  = module.resource_group.name
-  storage_account_id   = module.storage.id
-  key_vault_id         = module.key_vault.id
-  cognitive_account_id = module.foundry.account_id
-  search_service_id    = module.ai_search.id
-  search_principal_id  = module.ai_search.principal_id
-  tags                 = local.tags
+  name                         = local.names.id
+  location                     = module.resource_group.location
+  resource_group_name          = module.resource_group.name
+  storage_account_id           = module.storage.id
+  key_vault_id                 = module.key_vault.id
+  cognitive_account_id         = module.foundry.account_id
+  search_service_id            = module.ai_search.id
+  search_principal_id          = module.ai_search.principal_id
+  foundry_project_principal_id = module.foundry.project_principal_id
+  foundry_account_principal_id = module.foundry.account_principal_id
+  tags                         = local.tags
 }

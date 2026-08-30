@@ -50,6 +50,10 @@ output "foundry_project_name" {
   value = module.foundry.project_name
 }
 
+output "foundry_project_endpoint" {
+  value = module.foundry.project_endpoint
+}
+
 output "chat_deployment_name" {
   value = module.foundry.chat_deployment_name
 }

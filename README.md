@@ -75,7 +75,7 @@ See [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md) and [`terraform/README.md
 
 ## Agent flow
 
-> To be documented in `docs/ARCHITECTURE.md` once Phase 3 (Agents) lands — how the agent decides to retrieve vs. call a tool vs. defer.
+Documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#agent-flow): retrieve via Azure AI Search (`corpus-tuned`), synthesise multi-source answers with citations, or defer when outside the corpus. Conversation state is Foundry conversations/responses. Deploy scripts live under [`agents/`](agents/).
 
 ## Evaluation
 

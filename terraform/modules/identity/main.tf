@@ -55,3 +55,15 @@ resource "azurerm_role_assignment" "search_cognitive_services_user" {
   principal_id         = var.search_principal_id
 }
 
+resource "azurerm_role_assignment" "foundry_project_search_index_data_contributor" {
+  scope                = var.search_service_id
+  role_definition_name = "Search Index Data Contributor"
+  principal_id         = var.foundry_project_principal_id
+}
+
+resource "azurerm_role_assignment" "foundry_account_search_index_data_contributor" {
+  scope                = var.search_service_id
+  role_definition_name = "Search Index Data Contributor"
+  principal_id         = var.foundry_account_principal_id
+}
+
