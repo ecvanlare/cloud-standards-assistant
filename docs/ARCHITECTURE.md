@@ -12,7 +12,7 @@ flowchart LR
     A -->|retrieve| S[Azure AI Search]
     A -->|tool call| T1[Azure Function]
     A -->|tool call| T2[MCP / external API]
-    S --> C[(Corpus: WAF, CIS, NIST, Terraform docs)]
+    S --> C[(Corpus: WAF, ASB, NIST, Terraform docs)]
     A --> CS[Content Safety]
     A --> O[Control Plane tracing / App Insights]
     A --> R[Answer + citation]
@@ -32,14 +32,10 @@ Corpus blobs in the private storage `corpus` container are indexed by Azure AI S
 4. **Store** — Index projections write child chunks into `corpus-default` or `corpus-tuned` with citation fields: `framework`, `section`, `title`, `source_path`, `content`, `contentVector`.
 5. **Retrieve** — Hybrid query (keyword `search` + `vectorQueries` text-to-vector via the index vectorizer).
 
-CIS Benchmarks are ingested only from local `corpus/cis/` (gitignored); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-licensing). Foundry IQ managed grounding is deferred past Phase 2.
+All four sources are fetched from public URLs by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-sources). Foundry IQ managed grounding is deferred past Phase 2.
 
 Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md).
 
 ## Environments
 
 Three environments (`dev`, `staging`, `prod`) from the same Terraform modules, see `terraform/`.
-
-## Decisions
-
-See [`docs/adr/`](adr) for architecture decision records, starting with [ADR-0001: Container Apps over AKS](adr/0001-compute-platform.md).

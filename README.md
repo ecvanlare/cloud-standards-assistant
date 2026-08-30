@@ -1,10 +1,10 @@
 # Cloud & DevOps Standards Assistant
 
-A production-grade GenAI platform on Azure, built with the native Microsoft Foundry stack and Terraform. It answers questions from a corpus of Azure Well-Architected Framework, CIS Benchmarks, NIST, and Terraform best-practice documents, cites the exact source, and flags when a question falls outside its knowledge.
+A production-grade GenAI platform on Azure, built with the native Microsoft Foundry stack and Terraform. It answers questions from a corpus of Azure Well-Architected Framework, Azure Security Benchmark, NIST, and Terraform best-practice documents, cites the exact source, and flags when a question falls outside its knowledge.
 
 ## Status
 
-🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr) for design decisions made so far.
+🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current design.
 
 ## The Azure GenAI Stack
 
@@ -18,16 +18,16 @@ A production-grade GenAI platform on Azure, built with the native Microsoft Foun
 | Guardrails | Azure AI Content Safety, Foundry Control Plane safety |
 | Observability | Foundry Control Plane (OpenTelemetry), Application Insights |
 | Evaluation | Foundry evaluators (groundedness, relevance, safety) |
-| Compute | Azure Container Apps (see [ADR-0001](docs/adr/0001-compute-platform.md)) |
+| Compute | Azure Container Apps |
 | Secrets | Azure Key Vault |
 | IaC | Terraform |
 
 ## Corpus
 
-Public, non-confidential standards documents (see [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md#corpus-licensing) for CIS licensing):
+Public, non-confidential standards documents:
 
 - Azure Well-Architected Framework
-- CIS Benchmarks for Azure
+- Azure Security Benchmark
 - NIST Cybersecurity Framework / relevant NIST 800-53 controls
 - HashiCorp Terraform style guide / best-practice docs
 
@@ -45,8 +45,7 @@ cloud-standards-assistant/
 ├── serving/            # Container Apps manifests
 ├── docs/
 │   ├── INFRASTRUCTURE.md
-│   ├── ARCHITECTURE.md
-│   └── adr/
+│   └── ARCHITECTURE.md
 └── README.md
 ```
 
