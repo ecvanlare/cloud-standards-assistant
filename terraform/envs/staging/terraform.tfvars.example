@@ -1,0 +1,7 @@
+environment                        = "staging"
+location                           = "uksouth"
+subscription_id                    = "<subscription-id>"
+search_sku                         = "basic"
+key_vault_purge_protection_enabled = false
+chat_capacity                      = 10
+embedding_capacity                 = 10

@@ -1,34 +1,128 @@
 # Infrastructure
 
-> Fill in as Phase 1 lands.
+Phase 1 foundation for the Cloud & DevOps Standards Assistant on Azure, region **UK South**.
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph bootstrap [Shared once]
+    TFState[rg-csa-tfstate-uks]
+  end
+  subgraph env [Per environment e.g. dev]
+    RG[rg-csa-ENV-uks]
+    VNet[vnet + snet-aca]
+    SA[storage corpus]
+    KV[key_vault]
+    Search[ai_search]
+    Foundry[ais + proj + model deployments]
+    ACA[container_apps_env]
+    MI[user_assigned_identity]
+  end
+  TFState -.->|remote_state| env
+  RG --> VNet
+  RG --> SA
+  RG --> KV
+  RG --> Search
+  RG --> Foundry
+  RG --> ACA
+  RG --> MI
+  VNet --> ACA
+  MI -->|RBAC| SA
+  MI -->|RBAC| KV
+  MI -->|RBAC| Foundry
+  MI -->|RBAC| Search
+```
+
+## Naming convention
+
+Computed in each env’s `locals.tf` (not a naming module). Workload abbrev: `csa`. Region short: `uks`.
+
+| Resource | Pattern | Example (dev) |
+|---|---|---|
+| Resource group | `rg-{workload}-{env}-{loc}` | `rg-csa-dev-uks` |
+| VNet | `vnet-{workload}-{env}-{loc}` | `vnet-csa-dev-uks` |
+| ACA subnet | `snet-aca-{env}` | `snet-aca-dev` |
+| Storage | `st{workload}{env}{4char}` | `stcsadevab12` |
+| Key Vault | `kv-{workload}-{env}-{4char}` | `kv-csa-dev-ab12` |
+| AI Search | `srch-{workload}-{env}` | `srch-csa-dev` |
+| AI Services | `ais-{workload}-{env}` | `ais-csa-dev` |
+| Foundry project | `proj-{workload}-{env}` | `proj-csa-dev` |
+| ACA environment | `cae-{workload}-{env}` | `cae-csa-dev` |
+| Managed identity | `id-{workload}-{env}` | `id-csa-dev` |
+| Log Analytics | `log-{workload}-{env}` | `log-csa-dev` |
+
+Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `project=cloud-standards-assistant`.
 
 ## Resources provisioned by Terraform
 
-- Resource group
-- Virtual network
-- Microsoft Foundry project
+- Resource group, VNet + ACA-delegated subnet
+- Corpus storage account + private `corpus` container
+- Key Vault (RBAC mode)
 - Azure AI Search
-- Storage account (corpus + Terraform remote state)
-- Key Vault
-- Container Apps environment (see [ADR-0001](adr/0001-compute-platform.md))
-- Model deployments from the Foundry catalog
-- Managed identities for service-to-service auth
+- Microsoft Foundry (AIServices account + project)
+- Model deployments: `gpt-5-mini`, `text-embedding-3-small`
+- Container Apps environment (empty — apps in Phase 7)
+- User-assigned managed identity + RBAC to storage, KV, Foundry, Search
+
+AKS is **not** provisioned (see [ADR-0001](adr/0001-compute-platform.md)).
 
 ## Remote state
 
-Terraform state lives in an Azure Storage backend. Bootstrap steps and the exact storage account/container names go here once created.
+Bootstrap once (pass your subscription via env var — do not commit IDs):
+
+```bash
+SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
+```
+
+| Item | Value |
+|---|---|
+| Resource group | `rg-csa-tfstate-uks` |
+| Storage account | `stcsatfstateuks` |
+| Containers | `tfstate-dev`, `tfstate-staging`, `tfstate-prod` |
+| State keys | `csa-{env}.tfstate` |
 
 ## Environments
 
 | Environment | Purpose | Notes |
 |---|---|---|
-| dev | Iteration | Lower-tier SKUs, torn down freely |
-| staging | Pre-prod validation | Mirrors prod topology at smaller scale |
-| prod | The demo-facing deployment | Budget alert required before first apply |
+| dev | Iteration | Basic Search, no KV purge protection — **applied in Phase 1** |
+| staging | Pre-prod | Same topology as prod at Basic Search — plan-ready, not applied yet |
+| prod | Demo-facing | Standard Search, KV purge protection — plan-ready, not applied yet |
 
-## Cost estimate
+## Cost estimate (idle `dev`, rough)
 
-> Fill in once resources are sized — target: keep this cheap to leave running. Container Apps + AI Search Basic/Standard + a small Foundry model deployment should be low double-digit USD/month if not left maxed out. Set a budget alert (see Common Pitfalls in the brief) before the first `terraform apply`.
+Target: low double-digit USD/month if left mostly idle.
+
+| Resource | Rough monthly (idle) |
+|---|---|
+| AI Search Basic | ~$75 (largest fixed cost — tear down when not demoing) |
+| AI Services / model deployments | Pay-per-token; near $0 when idle (watch TPM quota) |
+| Storage + Key Vault | <$5 |
+| Log Analytics | <$5 at low ingest |
+| Container Apps env | Low / consumption when no apps |
+| VNet | Negligible |
+
+**Budget alert:** configure on the target subscription before first apply (suggested £50/month). Destroy `dev` when not in use:
+
+```bash
+cd terraform/envs/dev
+terraform destroy
+```
+
+## Foundry screenshot
+
+After `dev` apply, capture the Foundry project and model deployments in the portal for the portfolio write-up.
+
+## Apply order
+
+1. `az account set --subscription <subscription-id>`
+2. `SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh`
+3. Budget alert in Cost Management
+4. `cd terraform/envs/dev && cp terraform.tfvars.example terraform.tfvars` — fill in `subscription_id`
+5. `terraform init -backend-config=backend.hcl && terraform plan && terraform apply`
+
+Terraform dependency order inside apply: RG → (network, storage, KV, search, foundry, identity in parallel where safe) → ACA env (needs subnet + LAW) → RBAC assignments → model deployments.
 
 ## Teardown
 

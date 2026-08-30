@@ -2,10 +2,6 @@
 
 A production-grade GenAI platform on Azure, built with the native Microsoft Foundry stack and Terraform. It answers questions from a corpus of Azure Well-Architected Framework, CIS Benchmarks, NIST, and Terraform best-practice documents, cites the exact source, and flags when a question falls outside its knowledge.
 
-This is a portfolio build demonstrating an end-to-end Azure GenAI platform: infrastructure as code, retrieval, agents, tools, observability/evaluation, safety, and cost optimisation — all on Microsoft Foundry.
-
-Full build plan and progress: see the [project tracker](#) (Notion — link privately, not public in this README).
-
 ## Status
 
 🚧 In progress. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr) for design decisions made so far.
@@ -28,7 +24,7 @@ Full build plan and progress: see the [project tracker](#) (Notion — link priv
 
 ## Corpus
 
-Public, non-confidential standards documents (see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md#corpus-licensing) for licensing constraints — especially CIS redistribution limits):
+Public, non-confidential standards documents:
 
 - Azure Well-Architected Framework
 - CIS Benchmarks for Azure
@@ -45,13 +41,12 @@ cloud-standards-assistant/
 ├── tools/              # Agent tool configs (AI Search, Azure Function, MCP/external API)
 ├── safety/             # Content Safety config, red-team notes
 ├── eval/
-│   └── golden_set.jsonl # Golden eval set (50+ Q&A pairs)
-├── serving/            # Deployment manifests (Container Apps)
-├── scripts/            # Repo bootstrap (create GitHub repo, branch protection)
+│   └── golden_set.jsonl
+├── serving/            # Container Apps manifests
 ├── docs/
 │   ├── INFRASTRUCTURE.md
 │   ├── ARCHITECTURE.md
-│   └── adr/            # Architecture decision records
+│   └── adr/
 └── README.md
 ```
 
@@ -65,14 +60,19 @@ cloud-standards-assistant/
 
 ## Quick start
 
-> Fill in once Phase 1 (Infrastructure as Code) lands. Placeholder for now:
+Phase 1 (`dev`, UK South):
 
 ```bash
+az account set --subscription <subscription-id>
+SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
 cd terraform/envs/dev
-terraform init
+cp terraform.tfvars.example terraform.tfvars   # set subscription_id
+terraform init -backend-config=backend.hcl
 terraform plan
 terraform apply
 ```
+
+See [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md) and [`terraform/README.md`](terraform/README.md).
 
 ## Agent flow
 
