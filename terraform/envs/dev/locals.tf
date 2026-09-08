@@ -37,4 +37,11 @@ resource "random_string" "suffix" {
 locals {
   storage_name   = "st${local.workload}${local.env}${random_string.suffix.result}"
   key_vault_name = "kv-${local.workload}-${local.env}-${random_string.suffix.result}"
+
+  # Add a key to create another Function App (same module; role becomes part of the name).
+  function_apps = {
+    asb = {}
+    reg = {}
+  }
 }
+

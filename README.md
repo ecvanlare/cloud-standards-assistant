@@ -45,9 +45,11 @@ cloud-standards-assistant/
 ├── serving/            # Container Apps manifests
 ├── docs/
 │   ├── INFRASTRUCTURE.md
-│   └── ARCHITECTURE.md
+│   ├── ARCHITECTURE.md
+│   └── DEPLOYMENT.md
 └── README.md
 ```
+
 
 ## Prerequisites
 
@@ -71,11 +73,12 @@ terraform plan
 terraform apply
 ```
 
-See [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md) and [`terraform/README.md`](terraform/README.md).
+See [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md) and [`terraform/README.md`](terraform/README.md). Local scripts vs pipeline jobs: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Agent flow
 
-Documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#agent-flow): retrieve via Azure AI Search (`corpus-tuned`), synthesise multi-source answers with citations, or defer when outside the corpus. Conversation state is Foundry conversations/responses. Deploy scripts live under [`agents/`](agents/).
+Documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#agent-flow): retrieve via Azure AI Search (`corpus-tuned`), call the ASB version Function or Terraform Registry when needed, synthesise with citations, or defer when outside knowledge. Conversation state is Foundry conversations/responses. Deploy scripts live under [`agents/`](agents/) and [`tools/`](tools/); scale map in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 
 ## Evaluation
 

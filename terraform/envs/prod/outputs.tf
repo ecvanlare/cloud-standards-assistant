@@ -73,3 +73,28 @@ output "managed_identity_client_id" {
 output "managed_identity_principal_id" {
   value = module.identity.principal_id
 }
+
+output "function_app_name" {
+  value = module.function_app["asb"].name
+}
+
+output "function_base_url" {
+  value = module.function_app["asb"].function_base_url
+}
+
+output "registry_function_app_name" {
+  value = module.function_app["reg"].name
+}
+
+output "registry_function_base_url" {
+  value = module.function_app["reg"].function_base_url
+}
+
+output "function_apps" {
+  value = {
+    for key, app in module.function_app : key => {
+      name     = app.name
+      base_url = app.function_base_url
+    }
+  }
+}

@@ -34,6 +34,8 @@ load_tf_outputs() {
   CHAT_DEPLOYMENT="$(terraform output -raw chat_deployment_name)"
   SEARCH_ENDPOINT="$(terraform output -raw search_endpoint)"
   RG="$(terraform output -raw resource_group_name)"
+  FUNCTION_BASE_URL="$(terraform output -raw function_base_url 2>/dev/null || true)"
+  REGISTRY_FUNCTION_BASE_URL="$(terraform output -raw registry_function_base_url 2>/dev/null || true)"
   popd >/dev/null
 
   SEARCH_NAME="${SEARCH_ENDPOINT#https://}"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a Foundry Agent Service version (prompt agent + Azure AI Search tool)."""
+"""Create a Foundry Agent Service version with Search + OpenAPI tools."""
 
 from __future__ import annotations
 
@@ -22,16 +22,43 @@ def load_instructions() -> str:
     return (AGENTS_DIR / "instructions.md").read_text(encoding="utf-8").strip()
 
 
+def load_openapi_spec(
+    rel: str,
+    *,
+    function_base_url: str,
+    registry_function_base_url: str,
+) -> dict:
+    path = (AGENTS_DIR / rel).resolve()
+    text = path.read_text(encoding="utf-8")
+    text = text.replace("__FUNCTION_BASE_URL__", function_base_url.rstrip("/"))
+    text = text.replace("__REGISTRY_FUNCTION_BASE_URL__", registry_function_base_url.rstrip("/"))
+    return json.loads(text)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-endpoint", default=os.environ.get("FOUNDRY_PROJECT_ENDPOINT"))
     parser.add_argument("--connection-name", default=os.environ.get("SEARCH_CONNECTION_NAME", "csa-ai-search"))
     parser.add_argument("--index-name", default=os.environ.get("INDEX_NAME", "corpus-tuned"))
     parser.add_argument("--model", default=os.environ.get("CHAT_DEPLOYMENT"))
+    parser.add_argument("--function-base-url", default=os.environ.get("FUNCTION_BASE_URL", ""))
+    parser.add_argument(
+        "--registry-function-base-url",
+        default=os.environ.get("REGISTRY_FUNCTION_BASE_URL", ""),
+    )
     args = parser.parse_args()
 
     if not args.project_endpoint:
         print("FOUNDRY_PROJECT_ENDPOINT / --project-endpoint is required", file=sys.stderr)
+        return 1
+    if not args.function_base_url:
+        print("FUNCTION_BASE_URL / --function-base-url is required for ASB Function OpenAPI", file=sys.stderr)
+        return 1
+    if not args.registry_function_base_url:
+        print(
+            "REGISTRY_FUNCTION_BASE_URL / --registry-function-base-url is required for Registry Function OpenAPI",
+            file=sys.stderr,
+        )
         return 1
 
     definition = load_definition()
@@ -48,6 +75,9 @@ def main() -> int:
         AzureAISearchQueryType,
         AzureAISearchTool,
         AzureAISearchToolResource,
+        OpenApiAnonymousAuthDetails,
+        OpenApiFunctionDefinition,
+        OpenApiTool,
         PromptAgentDefinition,
     )
 
@@ -65,11 +95,10 @@ def main() -> int:
     client = AIProjectClient(endpoint=args.project_endpoint, credential=credential)
 
     connection = client.connections.get(args.connection_name)
-    # Agent tool expects the connection *name*, not the ARM resource id.
     connection_id = connection.name
     print(f"Using Search connection: {connection_id}")
 
-    tool = AzureAISearchTool(
+    search_tool = AzureAISearchTool(
         azure_ai_search=AzureAISearchToolResource(
             indexes=[
                 AISearchIndexResource(
@@ -82,12 +111,32 @@ def main() -> int:
         )
     )
 
+    tools = [search_tool]
+    tool_cfg = definition.get("tools") or {}
+    for key, cfg in tool_cfg.items():
+        spec = load_openapi_spec(
+            cfg["spec"],
+            function_base_url=args.function_base_url,
+            registry_function_base_url=args.registry_function_base_url,
+        )
+        tools.append(
+            OpenApiTool(
+                openapi=OpenApiFunctionDefinition(
+                    name=cfg.get("name") or key,
+                    description=cfg.get("description"),
+                    spec=spec,
+                    auth=OpenApiAnonymousAuthDetails(),
+                )
+            )
+        )
+        print(f"Attached OpenAPI tool: {cfg.get('name') or key}")
+
     agent = client.agents.create_version(
         agent_name=agent_name,
         definition=PromptAgentDefinition(
             model=model,
             instructions=instructions,
-            tools=[tool],
+            tools=tools,
         ),
         description=definition.get("description") or display_name,
         metadata={"display_name": display_name},
@@ -101,6 +150,9 @@ def main() -> int:
         "model": model,
         "index_name": args.index_name,
         "connection_name": args.connection_name,
+        "function_base_url": args.function_base_url.rstrip("/"),
+        "registry_function_base_url": args.registry_function_base_url.rstrip("/"),
+        "tool_count": len(tools),
     }
     (AGENTS_DIR / ".last-deploy.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(out, indent=2))
