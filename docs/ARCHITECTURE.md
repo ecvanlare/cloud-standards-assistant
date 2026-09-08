@@ -20,28 +20,38 @@ flowchart LR
 
 ## Agent flow
 
-The agent runs on **Foundry Agent Service**. Conversation state is a Foundry **conversation**; each user turn is a **response** (OpenAI Responses API via the project client).
+The agent runs on **Foundry Agent Service**. Conversation state is a Foundry **conversation**; each user turn is a **response** (OpenAI Responses API via the project client). The model may call **one or more tools** in a loop before the final message.
 
 ```mermaid
 flowchart TD
   U[User_message] --> T[Foundry_conversation]
   T --> R[Agent_response]
-  R --> D{In_corpus?}
-  D -->|yes| S[AzureAISearch_tool]
+  R --> C{Choose_tool}
+  C -->|corpus| S[AzureAISearch_tool]
+  C -->|ASB_version| F[AzureFunction_OpenAPI]
+  C -->|TF_versions| Reg[TerraformRegistry_OpenAPI]
+  C -->|none| Def[Defer_outside_knowledge]
   S --> I[corpus_tuned_hybrid]
-  I --> Syn[Synthesise_with_citations]
+  I --> Syn[Synthesise]
+  F --> Syn
+  Reg --> Syn
   Syn --> A[Answer]
-  D -->|no| Def[Defer_outside_knowledge]
+  Def --> A
 ```
 
 Decision rules (see [`agents/instructions.md`](../agents/instructions.md)):
 
-1. **Retrieve** — call the Azure AI Search tool (`corpus-tuned`, hybrid) when the question may be answered from WAF, ASB/MCSB, NIST, or Terraform docs in the index.
-2. **Multi-source** — for comparisons (for example ASB vs WAF on network segmentation), retrieve for each angle, then synthesise with citations.
-3. **Defer** — pricing, live Azure inventory, or anything with no retrieved evidence: say it is outside knowledge; do not invent controls.
-4. **Later tools** — Azure Function and MCP are Phase 4; they are not required for cite-or-defer with Search grounding.
+1. **Retrieve** — Azure AI Search (`corpus-tuned`, hybrid) for WAF / ASB / NIST / Terraform **guidance** in the index.
+2. **ASB version** — Azure Function `get_asb_version` for current ASB/MCSB version/revision (live tool, not the corpus).
+3. **Terraform Registry** — OpenAPI tool against a **dedicated** Azure Function that proxies `registry.terraform.io` for provider/module versions.
 
-Example: open the agent in the Foundry portal Playground and ask a multi-source corpus question (for example ASB vs WAF on network segmentation); inspect the run for Azure AI Search tool calls.
+
+4. **Multi-tool** — comparisons or mixed questions may call several tools in one turn.
+5. **Defer** — pricing, live inventory, or no tool evidence: outside knowledge; do not invent.
+6. **Failures** — see [`tools/FAILURE-HANDLING.md`](../tools/FAILURE-HANDLING.md).
+
+Tool configs: [`tools/`](../tools/). Portal Playground uses the same agent version as `./agents/scripts/deploy-agent.sh`. Local scripts vs enterprise pipeline: [`DEPLOYMENT.md`](DEPLOYMENT.md).
+
 
 ## Data flow / retrieval
 

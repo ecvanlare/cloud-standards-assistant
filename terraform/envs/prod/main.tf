@@ -87,3 +87,15 @@ module "identity" {
   foundry_account_principal_id = module.foundry.account_principal_id
   tags                         = local.tags
 }
+
+module "function_app" {
+  for_each = local.function_apps
+  source   = "../../modules/function_app"
+
+  name                 = "func-${each.key}-${local.workload}-${local.env}-${random_string.suffix.result}"
+  location             = module.resource_group.location
+  resource_group_name  = module.resource_group.name
+  storage_account_name = "stf${each.key}${local.workload}${local.env}${random_string.suffix.result}"
+  service_plan_name    = "asp-${local.workload}-${local.env}-${each.key}"
+  tags                 = local.tags
+}

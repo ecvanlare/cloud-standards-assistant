@@ -1,40 +1,42 @@
 # Agents (Foundry Agent Service)
 
-Definition and scripts for the **Cloud & DevOps Standards Assistant** (AZP-7).
+Definition and scripts for the **Cloud & DevOps Standards Assistant** (AZP-7 + AZP-3 tools).
 
 ## Layout
 
 | Path | Role |
 |------|------|
-| `standards-assistant.json` | Name, model (`gpt-5-mini`), Search grounding config |
-| `instructions.md` | Cite-or-defer instructions (retrieve / synthesise / defer) |
+| `standards-assistant.json` | Name, model (`gpt-5-mini`), Search + OpenAPI tool config |
+| `instructions.md` | When to Search vs Function vs Registry vs defer |
 | `scripts/ensure-search-connection.sh` | Foundry project connection → Azure AI Search (AAD) |
-| `scripts/deploy-agent.sh` | Upsert connection + create/update agent |
-| `scripts/run-demo.sh` | Conversation + response; prints answer and tool-step summary |
+| `scripts/deploy-agent.sh` | Upsert connection + create agent version |
+| `scripts/run-demo.sh` | Conversation + response demo |
 
-Conversation state is managed by Foundry **conversations** and **responses** (no custom session store). Deploy copies `instructions.md` into the agent version; Foundry does not read the markdown file at runtime. You can also chat with the same agent in the Foundry portal Playground.
+Tool OpenAPI specs and Function source live under [`tools/`](../tools/).
+
+Conversation state is Foundry **conversations** / **responses**. Deploy copies `instructions.md` into the agent version. Portal Playground uses the same agent.
 
 ## Prerequisites
 
-- Phase 1 `dev` stack + Phase 2 (`corpus-tuned` index ingested)
-- Terraform identity: Foundry project (and account) MI has Search Index Data Contributor
-- Azure CLI logged in; `terraform` outputs available under `terraform/envs/dev`
-- Python 3 with packages installed by the deploy/demo scripts (`azure-ai-projects`, `openai`, `azure-identity`)
+- Phase 1 `dev` stack + Search ingest + both Function Apps applied (`terraform/envs/dev`)
+- `./tools/scripts/deploy-function.sh` so `/api/asb/version` is live
+- `./tools/scripts/deploy-registry-function.sh` so Registry proxy routes are live
+- Azure CLI logged in; Python packages installed by deploy scripts
 
 ## Deploy (dev)
 
 ```bash
+./tools/scripts/deploy-function.sh
+./tools/scripts/deploy-registry-function.sh
 ./agents/scripts/deploy-agent.sh
 ```
 
 ## Demo
 
 ```bash
-./agents/scripts/run-demo.sh
-# or
-./agents/scripts/run-demo.sh "What does the Well-Architected Framework say about reliability zones?"
+./agents/scripts/run-demo.sh "What is the current Azure Security Benchmark version?"
+./agents/scripts/run-demo.sh "What versions does hashicorp/azurerm have on the Terraform Registry?"
+./agents/scripts/run-demo.sh "What does WAF say about availability zones?"
 ```
 
-Default question is the ASB + WAF network-segmentation compare.
-
-Phase 4 Function/MCP tools are out of scope here; retrieve = Azure AI Search tool; defer = instructions only. Hard Content Safety guardrails are a later phase.
+Local scripts vs enterprise pipeline: [`docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md).

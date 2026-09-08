@@ -3,6 +3,10 @@
 *.tfstate
 *.tfstate.*
 crash.log
+*.tfplan
+*.tfplan.*
+tfplan*.out
+
 crash.*.log
 *.tfvars
 *.tfvars.json
@@ -56,3 +60,6 @@ corpus/terraform/
 
 # Agent deploy metadata (local)
 agents/.last-deploy.json
+
+# Azure Functions local settings
+tools/functions/**/local.settings.json

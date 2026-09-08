@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ASB version Azure Function",
+    "version": "1.0.0",
+    "description": "Returns Microsoft cloud security benchmark / Azure Security Benchmark version metadata from the portfolio Azure Function."
+  },
+  "servers": [
+    {
+      "url": "__FUNCTION_BASE_URL__"
+    }
+  ],
+  "paths": {
+    "/asb/version": {
+      "get": {
+        "operationId": "get_asb_version",
+        "summary": "Get current Azure Security Benchmark / MCSB version",
+        "description": "Call this when the user asks for the current or latest Azure Security Benchmark, ASB, or Microsoft cloud security benchmark version or revision. Do not invent a version without calling this tool.",
+        "parameters": [
+          {
+            "name": "fail",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Set to true only for failure-handling demos."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "framework": { "type": "string" },
+                    "also_known_as": { "type": "string" },
+                    "version": { "type": "string" },
+                    "revision": { "type": "string" },
+                    "source_url": { "type": "string" },
+                    "notes": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Simulated or real Function failure"
+          }
+        }
+      }
+    }
+  }
+}

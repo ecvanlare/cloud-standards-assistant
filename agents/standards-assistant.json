@@ -3,13 +3,28 @@
   "agent_name": "cloud-devops-standards-assistant",
   "model": "gpt-5-mini",
   "instructions_file": "instructions.md",
-  "description": "Answers cloud and DevOps standards questions from the hybrid corpus with citations, or defers when outside knowledge.",
+  "description": "Answers cloud and DevOps standards questions with Search citations, ASB version Function, and Terraform Registry lookups.",
   "grounding": {
     "tool": "azure_ai_search",
     "index_name": "corpus-tuned",
     "query_type": "vector_simple_hybrid",
     "top_k": 5,
     "connection_name": "csa-ai-search"
+  },
+  "tools": {
+    "asb_version_openapi": {
+      "spec": "../tools/openapi/asb-version-function.json",
+      "auth": "anonymous",
+      "name": "asb_version_function",
+      "description": "Azure Function returning current ASB/MCSB version metadata"
+    },
+    "terraform_registry_openapi": {
+      "spec": "../tools/openapi/terraform-registry.json",
+      "auth": "anonymous",
+      "name": "terraform_registry",
+      "description": "Dedicated Azure Function proxying live Terraform Registry provider/module versions"
+
+    }
   },
   "conversation": {
     "state": "foundry_conversations"

@@ -25,6 +25,15 @@ def resolve_agent_name(explicit: str | None, default: str) -> str:
     return default
 
 
+def resolve_agent_version() -> str | None:
+    last = AGENTS_DIR / ".last-deploy.json"
+    if last.exists():
+        data = json.loads(last.read_text(encoding="utf-8"))
+        if data.get("version") is not None:
+            return str(data["version"])
+    return None
+
+
 def extract_tool_steps(response) -> list[dict]:
     steps = []
     for item in getattr(response, "output", None) or []:
@@ -59,9 +68,14 @@ def main() -> int:
 
     definition = json.loads((AGENTS_DIR / "standards-assistant.json").read_text(encoding="utf-8"))
     agent_name = resolve_agent_name(args.agent_name, definition.get("agent_name", "cloud-devops-standards-assistant"))
+    agent_version = resolve_agent_version()
 
     credential = DefaultAzureCredential(exclude_interactive_browser_credential=False)
     project = AIProjectClient(endpoint=args.project_endpoint, credential=credential)
+
+    agent_ref: dict = {"name": agent_name, "type": "agent_reference"}
+    if agent_version:
+        agent_ref["version"] = agent_version
 
     with project.get_openai_client() as openai_client:
         conversation = openai_client.conversations.create(
@@ -69,7 +83,7 @@ def main() -> int:
         )
         response = openai_client.responses.create(
             conversation=conversation.id,
-            extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
+            extra_body={"agent_reference": agent_ref},
         )
 
     answer = getattr(response, "output_text", None) or ""
@@ -80,7 +94,7 @@ def main() -> int:
         "conversation_id": conversation.id,
         "response_id": getattr(response, "id", None),
         "status": status,
-        "agent_name": agent_name,
+        "agent_name": f"{agent_name}:{agent_version}" if agent_version else agent_name,
         "question": args.question,
         "answer": answer,
         "steps": steps,

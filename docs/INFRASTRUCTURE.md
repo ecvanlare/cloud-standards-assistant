@@ -51,6 +51,14 @@ Computed in each env’s `locals.tf` (not a naming module). Workload abbrev: `cs
 | ACA environment | `cae-{workload}-{env}` | `cae-csa-dev` |
 | Managed identity | `id-{workload}-{env}` | `id-csa-dev` |
 | Log Analytics | `log-{workload}-{env}` | `log-csa-dev` |
+| ASB Function App | `func-asb-{workload}-{env}-{4char}` | `func-asb-csa-dev-8wlu` |
+| Registry Function App | `func-reg-{workload}-{env}-{4char}` | `func-reg-csa-dev-8wlu` |
+| ASB Function plan | `asp-{workload}-{env}-asb` | `asp-csa-dev-asb` |
+| Registry Function plan | `asp-{workload}-{env}-reg` | `asp-csa-dev-reg` |
+| ASB Function storage | `stfasb{workload}{env}{4char}` | `stfasbcsadev8wlu` |
+| Registry Function storage | `stfreg{workload}{env}{4char}` | `stfregcsadev8wlu` |
+
+Function Apps are created with `for_each = local.function_apps` (`asb`, `reg`). Add another key to the map to get another app; names use `each.key` as the role. `asp-` = App Service plan. Storage has no hyphens (Azure rule).
 
 Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `project=cloud-standards-assistant`.
 
@@ -67,6 +75,10 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
 - Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents)
 - Foundry project system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
+- Foundry account system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
+- Azure Function App (Flex Consumption FC1) for ASB version tool — see [`tools/`](../tools/)
+- Second Azure Function App (Flex Consumption FC1) for Terraform Registry proxy — see [`tools/`](../tools/); local vs pipeline deploy map in [`DEPLOYMENT.md`](DEPLOYMENT.md)
+
 
 Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
 

@@ -1,0 +1,57 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Terraform Registry (Azure Function proxy)",
+    "version": "1.0.0",
+    "description": "Live hashicorp/azurerm versions from registry.terraform.io, proxied through a dedicated Azure Function."
+  },
+  "servers": [
+    {
+      "url": "__REGISTRY_FUNCTION_BASE_URL__"
+    }
+  ],
+  "paths": {
+    "/terraform/azurerm/versions": {
+      "get": {
+        "operationId": "list_terraform_provider_versions",
+        "summary": "Get live hashicorp/azurerm Terraform provider versions",
+        "description": "Call this when the user asks for available or latest versions of the hashicorp/azurerm Terraform provider. Do not invent version numbers without calling this tool.",
+        "parameters": [
+          {
+            "name": "fail",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Set to true only for failure-handling demos."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Slim version summary from the public Registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "provider": { "type": "string" },
+                    "version_count": { "type": "integer" },
+                    "latest": { "type": "string" },
+                    "sample": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "source_url": { "type": "string" },
+                    "notes": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Simulated or real Function failure"
+          }
+        }
+      }
+    }
+  }
+}
