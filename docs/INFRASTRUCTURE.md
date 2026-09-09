@@ -51,6 +51,8 @@ Computed in each env’s `locals.tf` (not a naming module). Workload abbrev: `cs
 | ACA environment | `cae-{workload}-{env}` | `cae-csa-dev` |
 | Managed identity | `id-{workload}-{env}` | `id-csa-dev` |
 | Log Analytics | `log-{workload}-{env}` | `log-csa-dev` |
+| Application Insights | `appi-{workload}-{env}` | `appi-csa-dev` |
+| Container Apps env | `cae-{workload}-{env}` | `cae-csa-dev` |
 | ASB Function App | `func-asb-{workload}-{env}-{4char}` | `func-asb-csa-dev-8wlu` |
 | Registry Function App | `func-reg-{workload}-{env}-{4char}` | `func-reg-csa-dev-8wlu` |
 | ASB Function plan | `asp-{workload}-{env}-asb` | `asp-csa-dev-asb` |

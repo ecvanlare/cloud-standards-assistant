@@ -25,3 +25,10 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "application_insights_connection_string" {
+  type        = string
+  description = "Application Insights connection string for Function host telemetry. Empty skips wiring."
+  default     = ""
+  sensitive   = true
+}

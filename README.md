@@ -82,15 +82,17 @@ Documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#agent-flow): retriev
 
 ## Evaluation
 
-> To be documented once Phase 5 lands — the golden set, metrics (groundedness/relevance/safety), and results with failure analysis.
+Golden set: [`eval/golden_set.jsonl`](eval/golden_set.jsonl) (≥50 questions; WAF / ASB / NIST / Terraform; ASB stands in for CIS). Schema and rules: [`eval/README.md`](eval/README.md).
+
+Metrics (Foundry / `azure-ai-evaluation`): **groundedness**, **relevance**, **safety** (`ContentSafetyEvaluator`). Runner: `eval/scripts/run_eval.py`. Always-on schema gate: `eval/scripts/validate-golden-set.py` / CI workflow `.github/workflows/eval.yml`. Failure notes: [`eval/FAILURE-ANALYSIS.md`](eval/FAILURE-ANALYSIS.md).
 
 ## Cost
 
-> To be documented once Phase 6 lands — cost per interaction, and the effect of model tiering + prompt caching.
+Idle infra notes remain in [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md). Per-request latency / tokens / cost views: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) (Application Insights `appi-csa-{env}` + Foundry Control Plane tracing).
 
 ## Safety
 
-> To be documented once Phase 6 lands — Content Safety configuration and what it catches (including a red-team log of prompt-injection attempts).
+> Content Safety red-team deep dive remains Phase 6. AZP-8 includes evaluator **safety** scores in the eval runner; see `eval/` and `safety/README.md`.
 
 ## Trade-offs and lessons learned
 

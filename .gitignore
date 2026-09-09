@@ -48,7 +48,9 @@ Thumbs.db
 AGENTS.md
 
 # Eval / trace artifacts (regenerable, keep out of git)
-eval/results/
+eval/results/**
+!eval/results/.gitkeep
+!eval/results/latest-summary.md
 traces/
 *.log
 

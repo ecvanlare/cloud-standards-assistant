@@ -72,6 +72,16 @@ module "container_apps_env" {
   tags                     = local.tags
 }
 
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  name                       = local.names.appi
+  location                   = module.resource_group.location
+  resource_group_name        = module.resource_group.name
+  log_analytics_workspace_id = module.container_apps_env.log_analytics_workspace_id
+  tags                       = local.tags
+}
+
 module "identity" {
   source = "../../modules/identity"
 
@@ -92,10 +102,11 @@ module "function_app" {
   for_each = local.function_apps
   source   = "../../modules/function_app"
 
-  name                 = "func-${each.key}-${local.workload}-${local.env}-${random_string.suffix.result}"
-  location             = module.resource_group.location
-  resource_group_name  = module.resource_group.name
-  storage_account_name = "stf${each.key}${local.workload}${local.env}${random_string.suffix.result}"
-  service_plan_name    = "asp-${local.workload}-${local.env}-${each.key}"
-  tags                 = local.tags
+  name                                   = "func-${each.key}-${local.workload}-${local.env}-${random_string.suffix.result}"
+  location                               = module.resource_group.location
+  resource_group_name                    = module.resource_group.name
+  storage_account_name                   = "stf${each.key}${local.workload}${local.env}${random_string.suffix.result}"
+  service_plan_name                      = "asp-${local.workload}-${local.env}-${each.key}"
+  application_insights_connection_string = module.monitoring.connection_string
+  tags                                   = local.tags
 }

@@ -11,12 +11,14 @@ flowchart LR
     U[User] --> A[Agent - Foundry Agent Service]
     A -->|retrieve| S[Azure AI Search]
     A -->|tool call| T1[Azure Function]
-    A -->|tool call| T2[MCP / external API]
+    A -->|tool call| T2[Registry Azure Function]
     S --> C[(Corpus: WAF, ASB, NIST, Terraform docs)]
     A --> CS[Content Safety]
-    A --> O[Control Plane tracing / App Insights]
+    A --> O[Control Plane OTel to App Insights]
     A --> R[Answer + citation]
 ```
+
+Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md).
 
 ## Agent flow
 
