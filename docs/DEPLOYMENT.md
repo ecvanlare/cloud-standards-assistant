@@ -111,20 +111,25 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 | `search/scripts/deploy-search.sh` | Deploys index, skillset, indexer definitions | CI job on `search/**` changes; blue/green index swap |
 | `search/scripts/run-indexers.sh` | Triggers indexer runs | Event-driven reindex + monitoring on failures |
 | `search/scripts/query-example.sh` | Manual hybrid query demo | Retrieval regression tests in eval suite |
+| `eval/scripts/validate-golden-set.py` | Schema / ≥50-row gate (CI) | Required status check on agent/eval PRs |
+| `eval/scripts/run_eval.py` | Agent answers + Foundry evaluators | Nightly / pre-release eval job with thresholds |
+| `eval/scripts/run-regression.sh` | Schema always; live eval when `RUN_LIVE_EVAL=1` | Gates merge for agent-touching changes |
+| `docs/OBSERVABILITY.md` | App Insights + Control Plane wiring | Shared dashboards / alerts from workbook |
 
 ### CI/CD and docs
 
 | File | Today | Enterprise replacement |
 |------|-------|------------------------|
 | `.github/workflows/terraform-ci.yml` | PR: fmt + validate; plan commented out | Full CI/CD: plan on PR, apply on merge, OIDC, env gates |
+| `.github/workflows/eval.yml` | Validates `golden_set.jsonl` (≥50) | Live evaluator job with OIDC + fail on score drop |
 | `docs/ARCHITECTURE.md` | Architecture + tool decision rules | Living architecture (ADR/C4), synced from code where possible |
-| `docs/INFRASTRUCTURE.md` | Infra inventory including Function App | CMDB / infra diagram from Terraform state |
+| `docs/INFRASTRUCTURE.md` | Infra inventory including Function App + App Insights | CMDB / infra diagram from Terraform state |
 | `.cursor/rules/terraform.mdc` | Do not enable plan without OIDC | Repo policy + required CI checks before merge |
 
 ## Why scripts first (portfolio)
 
-- AZP-3 goal: prove Search vs Function vs Registry on **dev**, not ship full CD.
-- Workflows need Azure OIDC (federated credential + secrets) before `plan`/`apply` can run in Actions.
+- AZP-3 / AZP-8: prove tools and eval/obs on **dev**, not ship full CD.
+- Workflows need Azure OIDC (federated credential + secrets) before `plan`/`apply` or live eval can run in Actions.
 - Deploy is four surfaces (Terraform, Search, Function, agent); scripts mirror that split while wiring is still moving.
 - Laptop loop is faster for OpenAPI URL / agent tool debugging than push-and-wait.
 

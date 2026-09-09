@@ -43,9 +43,14 @@ resource "azurerm_function_app_flex_consumption" "this" {
 
   site_config {}
 
-  app_settings = {
-    AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
-  }
+  app_settings = merge(
+    {
+      AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
+    },
+    var.application_insights_connection_string != "" ? {
+      APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
+    } : {}
+  )
 
   identity {
     type = "SystemAssigned"

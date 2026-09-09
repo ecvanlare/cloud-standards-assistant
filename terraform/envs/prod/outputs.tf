@@ -98,3 +98,16 @@ output "function_apps" {
     }
   }
 }
+
+output "application_insights_name" {
+  value = module.monitoring.name
+}
+
+output "application_insights_connection_string" {
+  value     = module.monitoring.connection_string
+  sensitive = true
+}
+
+output "application_insights_app_id" {
+  value = module.monitoring.app_id
+}

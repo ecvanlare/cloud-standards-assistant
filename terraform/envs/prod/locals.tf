@@ -14,6 +14,7 @@ locals {
     cae      = "cae-${local.workload}-${local.env}"
     id       = "id-${local.workload}-${local.env}"
     log      = "log-${local.workload}-${local.env}"
+    appi     = "appi-${local.workload}-${local.env}"
   }
 
   tags = {

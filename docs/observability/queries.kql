@@ -1,0 +1,41 @@
+// Application Insights queries for appi-csa-{env} (AZP-8)
+// Paste into App Insights → Logs. Adjust time range as needed.
+
+// 1) Recent requests by duration (latency)
+requests
+| where timestamp > ago(24h)
+| project timestamp, name, duration, resultCode, success, operation_Id
+| order by timestamp desc
+| take 50
+
+// 2) Dependencies (Function / HTTP tool hops)
+dependencies
+| where timestamp > ago(24h)
+| project timestamp, name, type, target, duration, success, operation_Id
+| order by timestamp desc
+| take 50
+
+// 3) End-to-end join: request + dependencies for one operation
+let op = "<paste-operation-id>";
+requests
+| where operation_Id == op
+| union (
+    dependencies
+    | where operation_Id == op
+  )
+| project timestamp, itemType, name, duration, success
+| order by timestamp asc
+
+// 4) Token / gen_ai style customMetrics when Foundry exports them
+customMetrics
+| where timestamp > ago(24h)
+| where name has_any ("token", "Token", "gen_ai")
+| summarize total=sum(value), samples=count() by name, bin(timestamp, 1h)
+| order by timestamp desc
+
+// 5) Approximate cost signal: sum token metrics (multiply by your deployment rate offline)
+customMetrics
+| where timestamp > ago(24h)
+| where name has_any ("CompletionTokens", "PromptTokens", "TotalTokens", "gen_ai.usage")
+| summarize tokens=sum(value) by name
+| order by tokens desc
