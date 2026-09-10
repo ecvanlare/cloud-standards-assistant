@@ -8,6 +8,4 @@ See [`../OBSERVABILITY.md`](../OBSERVABILITY.md) for wiring.
 
 ## Evidence image
 
-[`trace-cost-per-request.png`](trace-cost-per-request.png) — generated from a live App Insights `requests` query showing Function tool-hop latency for `get_asb_version` (`operation_Id` prefix `c93fd88ea796…`, ~131 ms).
-
-**Portal follow-up (cost / tokens):** In Foundry project Tracing, link `appi-csa-dev`, run a multi-tool turn, then capture the transaction blade that shows token or cost fields and replace/supplement this PNG. Function host telemetry is already flowing via `APPLICATIONINSIGHTS_CONNECTION_STRING`.
+[`trace-cost-per-request.png`](trace-cost-per-request.png) — App Insights `requests` sample for Function tool-hop latency (`get_asb_version`). Foundry Control Plane traces (tokens / estimated cost) are in [`docs/screenshots/`](../screenshots/).
