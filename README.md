@@ -1,6 +1,19 @@
 # Cloud & DevOps Standards Assistant
 
-Answers cloud standards questions from a public corpus (WAF, Azure Security Benchmark / MCSB, NIST, Terraform docs), cites sources, and defers when outside knowledge. Built on Microsoft Foundry and Terraform in UK South.
+Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, multi-tool agent, Container Apps UI/BFF, OpenTelemetry / Foundry traces, RAI guardrails, and cloud + CI evaluation.
+
+| Capability | What this repo demonstrates |
+|---|---|
+| RAG / vector store | Azure AI Search index (`corpus-tuned`); hybrid keyword + vector (`vectorQueries`); embeddings `text-embedding-3-small` |
+| Ingestion | Blob corpus → indexer → skillsets (chunk + embed) → citation fields (`framework` / `section` / `title`) |
+| Agent + tools | Foundry Agent Service; Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
+| Application | Chat UI + BFF on Azure Container Apps; HTTP scale (incl. toward zero); Key Vault + user-assigned MI; Entra to Foundry |
+| Observability | BFF OpenTelemetry → Application Insights; Foundry Control Plane traces (latency, tokens, estimated cost) |
+| Safety | Foundry RAI / content filters (`csa-blocking-medium`); jailbreak / XPIA / PII instruction guards; red-team notes |
+| Evaluation | Golden set (≥50); groundedness / relevance / safety; CI schema gate; Foundry cloud Evaluations |
+| Cost / ops | Tool-path routing (Function vs Search); Terraform `dev`/`staging`/`prod`; `dev-up` / `dev-down` |
+
+Answers standards questions from a public corpus (WAF, ASB / MCSB, NIST, Terraform docs); defers outside knowledge (e.g. live pricing).
 
 ## Azure stack
 
@@ -8,7 +21,7 @@ Answers cloud standards questions from a public corpus (WAF, Azure Security Benc
 |---|---|
 | Platform | Microsoft Foundry (`ais-csa-*` / `proj-csa-*`) |
 | Model | `gpt-5-mini` + `text-embedding-3-small` |
-| Retrieval | Azure AI Search (`corpus-tuned`, hybrid) |
+| Retrieval | Azure AI Search (`corpus-tuned`) — vector fields + hybrid (keyword + `vectorQueries`) |
 | Agent | Foundry Agent Service |
 | Tools | AI Search tool; Azure Functions (ASB version, Terraform Registry proxy) |
 | App | Azure Container Apps (chat UI + BFF) |
@@ -87,7 +100,7 @@ Details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Cost notes: [`docs/INFRASTR
 
 ## Agent flow
 
-1. **Retrieve** — hybrid Search on `corpus-tuned` for WAF / ASB / NIST / Terraform guidance; cite `framework` / `section` / `title`.
+1. **Retrieve (RAG)** — hybrid Search on `corpus-tuned` (keyword + vector / embeddings) for WAF / ASB / NIST / Terraform guidance; cite `framework` / `section` / `title`.
 2. **ASB version** — Azure Function `get_asb_version` (live tool, not corpus).
 3. **Terraform Registry** — dedicated Function proxies `registry.terraform.io` for provider/module versions.
 4. **Multi-tool** — comparisons may call several tools in one turn.
