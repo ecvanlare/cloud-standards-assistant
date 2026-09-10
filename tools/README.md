@@ -8,7 +8,7 @@ Three tools on the Cloud & DevOps Standards Assistant:
 | ASB version | Function App A (`GET /api/asb/version`) via OpenAPI | Current ASB/MCSB version/revision |
 | Terraform Registry | Function App B (`GET /api/terraform/providers/...`) via OpenAPI | Live provider/module versions from `registry.terraform.io` |
 
-Function B proxies HashiCorp because Foundry OpenAPI did not reliably invoke `registry.terraform.io` directly. Two Function Apps keep independent URLs and deploys. Container Apps stay reserved for Phase 7 serving.
+Function B proxies HashiCorp because Foundry OpenAPI did not reliably invoke `registry.terraform.io` directly. Two Function Apps keep independent URLs and deploys. The user-facing app is on Container Apps (`serving/`), not these Functions.
 
 ## Layout
 

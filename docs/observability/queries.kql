@@ -39,3 +39,30 @@ customMetrics
 | where name has_any ("CompletionTokens", "PromptTokens", "TotalTokens", "gen_ai.usage")
 | summarize tokens=sum(value) by name
 | order by tokens desc
+
+// 6) Serving BFF asks (Container App) — custom dimensions from /api/ask
+requests
+| where timestamp > ago(24h)
+| where name has "ask" or url has "/api/ask"
+| extend session_id = tostring(customDimensions.csa_session_id)
+| extend conversation_id = tostring(customDimensions.csa_conversation_id)
+| extend tool_path = tostring(customDimensions.csa_tool_path)
+| project timestamp, name, duration, resultCode, operation_Id, session_id, conversation_id, tool_path
+| order by timestamp desc
+| take 50
+
+// 7) Join BFF request to outbound Foundry dependencies by operation_Id
+let op = "<paste-trace-id-or-operation_Id-from-UI>";
+requests
+| where operation_Id == op or operation_Id startswith tostring(op)
+| union (dependencies | where operation_Id == op or operation_Id startswith tostring(op))
+| project timestamp, itemType, name, target, duration, success, operation_Id
+| order by timestamp asc
+
+// 8) Find BFF turns for a Foundry conversation id (when W3C parent is not shared)
+let conv = "<paste-conversation_id>";
+requests
+| where timestamp > ago(24h)
+| where tostring(customDimensions.csa_conversation_id) == conv
+| project timestamp, duration, operation_Id, resultCode, customDimensions
+| order by timestamp desc

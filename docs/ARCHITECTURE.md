@@ -18,7 +18,7 @@ flowchart LR
     A --> R[Answer + citation]
 ```
 
-Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md).
+Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md). The serving Container App BFF also exports to the same App Insights resource; join keys and limits are documented there.
 
 **Content Safety** in the diagram is the Foundry account **RAI / content-filter policy** (`csa-blocking-medium`: Prompt + Completion Blocking at Medium, plus Jailbreak) attached to the chat deployment and referenced from the agent `rai_config`. Instruction-level cite-or-defer, XPIA, and PII rules live in [`agents/instructions.md`](../agents/instructions.md). Details: [`safety/content-safety.md`](../safety/content-safety.md).
 
@@ -70,6 +70,14 @@ Corpus blobs in the private storage `corpus` container are indexed by Azure AI S
 Public corpus sources (WAF, Azure Security Benchmark, NIST, Terraform) are fetched by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-sources). Foundry IQ managed grounding remains out of scope.
 
 Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md). Agent deploy: [`agents/`](../agents/).
+
+## ADR-0001 — App layer on Container Apps (not AKS)
+
+**Decision:** The **agent** runs on **Foundry Agent Service**. The **user-facing app** (chatbot UI + thin BFF) runs on **Azure Container Apps** on the existing `cae-*` environment — not AKS, and not Static Web Apps alone.
+
+**Why:** Checklist and portfolio scope need an ACA process with HTTP autoscaling, Key Vault secrets via managed identity, and Entra auth to Foundry. AKS would add cluster ops without changing the agent runtime. SWA can host static files but does not satisfy the ACA serving deliverable by itself.
+
+**Consequences:** One Container App image serves UI + BFF (`serving/`). Foundry conversations stay per client session (see [`serving/ISOLATION.md`](../serving/ISOLATION.md)). Scale rules live in `terraform/modules/container_app/`.
 
 ## Environments
 

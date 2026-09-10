@@ -15,6 +15,7 @@ locals {
     id       = "id-${local.workload}-${local.env}"
     log      = "log-${local.workload}-${local.env}"
     appi     = "appi-${local.workload}-${local.env}"
+    ca       = "ca-${local.workload}-${local.env}-serving"
   }
 
   tags = {
@@ -38,11 +39,15 @@ resource "random_string" "suffix" {
 locals {
   storage_name   = "st${local.workload}${local.env}${random_string.suffix.result}"
   key_vault_name = "kv-${local.workload}-${local.env}-${random_string.suffix.result}"
+  # ACR: 5–50 alphanumeric, globally unique.
+  acr_name = "acr${local.workload}${local.env}${random_string.suffix.result}"
 
   # Add a key to create another Function App (same module; role becomes part of the name).
   function_apps = {
     asb = {}
     reg = {}
   }
+
+  serving_image = "${module.acr.login_server}/csa-serving:${var.serving_image_tag}"
 }
 

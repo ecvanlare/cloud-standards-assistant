@@ -110,3 +110,33 @@ module "function_app" {
   application_insights_connection_string = module.monitoring.connection_string
   tags                                   = local.tags
 }
+
+module "acr" {
+  source = "../../modules/acr"
+
+  name                = local.acr_name
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
+  tags                = local.tags
+}
+
+module "container_app" {
+  source = "../../modules/container_app"
+
+  name                                   = local.names.ca
+  resource_group_name                    = module.resource_group.name
+  container_app_environment_id           = module.container_apps_env.id
+  user_assigned_identity_id              = module.identity.id
+  user_assigned_identity_client_id       = module.identity.client_id
+  user_assigned_identity_principal_id    = module.identity.principal_id
+  acr_login_server                       = module.acr.login_server
+  acr_id                                 = module.acr.id
+  image                                  = local.serving_image
+  foundry_project_endpoint               = module.foundry.project_endpoint
+  key_vault_id                           = module.key_vault.id
+  application_insights_connection_string = module.monitoring.connection_string
+  min_replicas                           = var.serving_min_replicas
+  max_replicas                           = var.serving_max_replicas
+  concurrent_requests                    = var.serving_concurrent_requests
+  tags                                   = local.tags
+}

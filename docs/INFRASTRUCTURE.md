@@ -17,6 +17,8 @@ flowchart TB
     Search[ai_search]
     Foundry[ais + proj + model deployments]
     ACA[container_apps_env]
+    ACR[acr]
+    CA[ca-serving UI plus BFF]
     MI[user_assigned_identity]
   end
   TFState -.->|remote_state| env
@@ -26,12 +28,18 @@ flowchart TB
   RG --> Search
   RG --> Foundry
   RG --> ACA
+  RG --> ACR
   RG --> MI
   VNet --> ACA
+  ACA --> CA
+  ACR --> CA
   MI -->|RBAC| SA
   MI -->|RBAC| KV
   MI -->|RBAC| Foundry
   MI -->|RBAC| Search
+  MI -->|AcrPull| ACR
+  CA -->|KV secret ref| KV
+  CA -->|Entra| Foundry
 ```
 
 ## Naming convention
@@ -53,6 +61,8 @@ Computed in each env’s `locals.tf` (not a naming module). Workload abbrev: `cs
 | Log Analytics | `log-{workload}-{env}` | `log-csa-dev` |
 | Application Insights | `appi-{workload}-{env}` | `appi-csa-dev` |
 | Container Apps env | `cae-{workload}-{env}` | `cae-csa-dev` |
+| Container Registry | `acr{workload}{env}{4char}` | `acrcsadevab12` |
+| Serving Container App | `ca-{workload}-{env}-serving` | `ca-csa-dev-serving` |
 | ASB Function App | `func-asb-{workload}-{env}-{4char}` | `func-asb-csa-dev-8wlu` |
 | Registry Function App | `func-reg-{workload}-{env}-{4char}` | `func-reg-csa-dev-8wlu` |
 | ASB Function plan | `asp-{workload}-{env}-asb` | `asp-csa-dev-asb` |
@@ -72,15 +82,15 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - Azure AI Search
 - Microsoft Foundry (AIServices account + project)
 - Model deployments: `gpt-5-mini`, `text-embedding-3-small`
-- Container Apps environment (empty — apps in Phase 7)
-- User-assigned managed identity + RBAC to storage, KV, Foundry, Search
+- Container Apps environment + ACR + serving Container App (UI + BFF) — see [`serving/`](../serving/)
+- User-assigned managed identity + RBAC to storage, KV, Foundry, Search, ACR pull
 - Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
-- Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents)
+- Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents); ACR Push
 - Foundry project system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
 - Foundry account system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
 - Azure Function App (Flex Consumption FC1) for ASB version tool — see [`tools/`](../tools/)
 - Second Azure Function App (Flex Consumption FC1) for Terraform Registry proxy — see [`tools/`](../tools/); local vs pipeline deploy map in [`DEPLOYMENT.md`](DEPLOYMENT.md)
-
+- Key Vault secret `serving-session-pepper` referenced by the serving Container App (KV proof; Foundry uses Entra)
 
 Index, skillset, and indexer definitions live in [`search/`](../search/) (deployed with scripts, not Terraform).
 
@@ -129,14 +139,18 @@ Target: low double-digit USD/month if left mostly idle.
 | Storage + Key Vault | <$5 |
 | Log Analytics | <$5 at low ingest |
 | Container Apps env | Low / consumption when no apps |
+| ACR Basic | ~$5 |
+| Serving Container App | Pay per vCPU-s / GiB-s when replicas > 0 |
 | VNet | Negligible |
 
-**Budget alert:** configure on the target subscription before first apply (suggested £50/month). Destroy `dev` when not in use:
+**Budget alert:** configure on the target subscription before first apply (suggested £50/month). Destroy `dev` when not demoing (AI Search Basic is the largest idle cost):
 
 ```bash
-cd terraform/envs/dev
-terraform destroy
+CONFIRM_DESTROY=1 ./scripts/dev-down.sh
+# equivalent: cd terraform/envs/dev && terraform destroy
 ```
+
+Bring it back with `./scripts/dev-up.sh` (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
 
 ## Foundry screenshot
 
@@ -155,6 +169,8 @@ Terraform dependency order inside apply: RG → (network, storage, KV, search, f
 ## Teardown
 
 ```bash
-cd terraform/envs/<env>
-terraform destroy
+CONFIRM_DESTROY=1 ./scripts/dev-down.sh
+# or: cd terraform/envs/<env> && terraform destroy
 ```
+
+Remote state (`rg-csa-tfstate-uks`) is kept so the next `./scripts/dev-up.sh` / `terraform apply` can recreate the env.

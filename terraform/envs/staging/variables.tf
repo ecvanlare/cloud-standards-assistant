@@ -36,3 +36,25 @@ variable "embedding_capacity" {
   description = "Embedding model deployment capacity (TPM in thousands)."
   default     = 10
 }
+
+variable "serving_image_tag" {
+  type        = string
+  description = "ACR tag for the serving Container App image (pushed by serving/scripts/deploy-serving.sh)."
+  default     = "latest"
+}
+
+variable "serving_min_replicas" {
+  type    = number
+  default = 0
+}
+
+variable "serving_max_replicas" {
+  type    = number
+  default = 5
+}
+
+variable "serving_concurrent_requests" {
+  type        = number
+  description = "HTTP concurrent requests per replica before scale-out."
+  default     = 10
+}

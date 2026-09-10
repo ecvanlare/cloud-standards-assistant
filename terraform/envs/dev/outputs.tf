@@ -111,3 +111,23 @@ output "application_insights_connection_string" {
 output "application_insights_app_id" {
   value = module.monitoring.app_id
 }
+
+output "acr_name" {
+  value = module.acr.name
+}
+
+output "acr_login_server" {
+  value = module.acr.login_server
+}
+
+output "serving_container_app_name" {
+  value = module.container_app.name
+}
+
+output "serving_url" {
+  value = module.container_app.url
+}
+
+output "serving_fqdn" {
+  value = module.container_app.fqdn
+}
