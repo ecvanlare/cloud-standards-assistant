@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# Recreate the portfolio stack after a destroy (or first laptop bring-up).
-# Prereqs: az login, terraform.tfvars filled, remote state already bootstrapped.
+# Recreate the stack after destroy (or first laptop bring-up).
+# Prereqs: az login, terraform.tfvars filled, remote state bootstrapped.
 #
-# Usage:
 #   ./scripts/dev-up.sh
 #   SKIP_SEARCH=1 ./scripts/dev-up.sh
-#   SKIP_SERVING=1 ./scripts/dev-up.sh   # infra only via terraform apply (no ACR image path)
+#   SKIP_SERVING=1 ./scripts/dev-up.sh   # terraform apply only (no ACR image path)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -29,7 +28,7 @@ if [[ "${SKIP_SERVING}" == "1" ]]; then
   terraform apply -input=false -auto-approve
   popd >/dev/null
 else
-  # ACR → build image → full apply (avoids Container App chicken-egg without -exclude).
+  # ACR → build image → full apply (Container App needs an image before first create).
   # Skip /api/ask here; agent may not be registered yet.
   echo "==> Terraform + ACR image + Container App (${ENV})"
   SKIP_ASK=1 "${ROOT}/serving/scripts/deploy-serving.sh"

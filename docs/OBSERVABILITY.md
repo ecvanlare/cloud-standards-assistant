@@ -23,7 +23,7 @@ Browser  -->  ACA BFF (/api/ask)  --OTel-->  Application Insights
 | Agent model + tools (Search / Functions) | Foundry Control Plane traces in the same App Insights resource (after portal link) |
 | Join BFF ↔ agent when parent context is not shared | Custom dims `csa_session_id`, `csa_conversation_id` on the BFF span + Foundry conversation id / time window |
 
-**Honest limit:** Foundry Agent Service does not always continue the BFF’s W3C `traceparent` as one App Insights transaction. RAG/vector work usually appears as the agent’s **Azure AI Search tool** span inside the Foundry trace, not as a separate Search-service child of the ACA request. Use `trace_id` + `csa_conversation_id` together when stitching.
+Foundry may not continue the BFF’s W3C `traceparent` as one transaction. RAG usually appears as the agent’s **Azure AI Search tool** span. Stitch with `trace_id` + `csa_conversation_id` when needed.
 
 ## What Terraform creates
 

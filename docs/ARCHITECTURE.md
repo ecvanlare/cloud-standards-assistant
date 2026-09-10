@@ -71,13 +71,11 @@ Public corpus sources (WAF, Azure Security Benchmark, NIST, Terraform) are fetch
 
 Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md). Agent deploy: [`agents/`](../agents/).
 
-## ADR-0001 — App layer on Container Apps (not AKS)
+## App layer (Container Apps)
 
-**Decision:** The **agent** runs on **Foundry Agent Service**. The **user-facing app** (chatbot UI + thin BFF) runs on **Azure Container Apps** on the existing `cae-*` environment — not AKS, and not Static Web Apps alone.
+The **agent** runs on **Foundry Agent Service**. The **user-facing app** (chatbot UI + BFF) runs on **Azure Container Apps** (`cae-*`): HTTP autoscaling, Key Vault secrets via managed identity, Entra auth to Foundry.
 
-**Why:** Checklist and portfolio scope need an ACA process with HTTP autoscaling, Key Vault secrets via managed identity, and Entra auth to Foundry. AKS would add cluster ops without changing the agent runtime. SWA can host static files but does not satisfy the ACA serving deliverable by itself.
-
-**Consequences:** One Container App image serves UI + BFF (`serving/`). Foundry conversations stay per client session (see [`serving/ISOLATION.md`](../serving/ISOLATION.md)). Scale rules live in `terraform/modules/container_app/`.
+One image serves UI + BFF (`serving/`). Conversations are per client session ([`serving/ISOLATION.md`](../serving/ISOLATION.md)). Scale rules: `terraform/modules/container_app/`.
 
 ## Environments
 

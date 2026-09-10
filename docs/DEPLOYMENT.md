@@ -151,7 +151,7 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 |------|-------|------------------------|
 | `.github/workflows/terraform-ci.yml` | PR: fmt + validate; plan commented out | Full CI/CD: plan on PR, apply on merge, OIDC, env gates |
 | `.github/workflows/eval.yml` | Validates `golden_set.jsonl` (≥50) | Live evaluator job with OIDC + fail on score drop |
-| `docs/ARCHITECTURE.md` | Architecture + ADR-0001 (ACA app layer) | Living architecture (ADR/C4), synced from code where possible |
+| `docs/ARCHITECTURE.md` | Architecture + app layer (ACA) | Living architecture (ADR/C4), synced from code where possible |
 | `docs/INFRASTRUCTURE.md` | Infra inventory including Function App + App Insights | CMDB / infra diagram from Terraform state |
 | `.cursor/rules/terraform.mdc` | Do not enable plan without OIDC | Repo policy + required CI checks before merge |
 

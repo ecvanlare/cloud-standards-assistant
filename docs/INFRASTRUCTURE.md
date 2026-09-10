@@ -152,9 +152,9 @@ CONFIRM_DESTROY=1 ./scripts/dev-down.sh
 
 Bring it back with `./scripts/dev-up.sh` (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
 
-## Foundry screenshot
+## Foundry check
 
-After `dev` apply, capture the Foundry project and model deployments in the portal for the portfolio write-up.
+After `dev` apply, confirm the Foundry project and model deployments in the portal.
 
 ## Apply order
 
