@@ -67,3 +67,10 @@ resource "azurerm_role_assignment" "foundry_account_search_index_data_contributo
   principal_id         = var.foundry_account_principal_id
 }
 
+# Datasets / Evaluations upload blobs via the project MI on the corpus storage connection.
+resource "azurerm_role_assignment" "foundry_project_storage_blob_data_contributor" {
+  scope                = var.storage_account_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = var.foundry_project_principal_id
+}
+

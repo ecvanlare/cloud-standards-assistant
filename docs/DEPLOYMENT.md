@@ -113,7 +113,12 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 | `search/scripts/query-example.sh` | Manual hybrid query demo | Retrieval regression tests in eval suite |
 | `eval/scripts/validate-golden-set.py` | Schema / ≥50-row gate (CI) | Required status check on agent/eval PRs |
 | `eval/scripts/run_eval.py` | Agent answers + Foundry evaluators | Nightly / pre-release eval job with thresholds |
-| `eval/scripts/run-regression.sh` | Schema always; live eval when `RUN_LIVE_EVAL=1` | Gates merge for agent-touching changes |
+| `eval/scripts/run-regression.sh` | Schema always; `RUN_LIVE_EVAL=1` and/or `RUN_FOUNDRY_CLOUD_EVAL=1` | Gates merge; optional laptop/portal eval |
+| `eval/scripts/ensure-storage-connection.sh` | Foundry ↔ corpus storage (Entra) for Datasets/Eval | Terraform/Bicep owns connection; job verifies |
+| `eval/scripts/export-foundry-dataset.py` | Golden → Foundry JSONL (`query` + metadata) | Pipeline step before dataset upload |
+| `eval/scripts/upload-foundry-dataset.py` | `datasets.upload_file` into project | Artifact promotion of golden set versions |
+| `eval/scripts/run-foundry-eval.py` / `.sh` | Cloud agent eval run (portal Evaluations tab) | Scheduled Foundry eval job; see [`FOUNDRY-EVAL.md`](FOUNDRY-EVAL.md) |
+| `docs/FOUNDRY-EVAL.md` | Storage RBAC, dual-path eval, cost warning | Internal eval runbook |
 | `docs/OBSERVABILITY.md` | App Insights + Control Plane wiring | Shared dashboards / alerts from workbook |
 
 ### CI/CD and docs
