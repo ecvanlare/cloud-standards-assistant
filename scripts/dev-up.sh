@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Recreate the stack after destroy (or first laptop bring-up).
-# Prereqs: az login, terraform.tfvars filled, remote state bootstrapped.
+# Apply and deploy the env stack.
+# Prereqs: az login, terraform.tfvars, remote state.
 #
 #   ./scripts/dev-up.sh
 #   SKIP_SEARCH=1 ./scripts/dev-up.sh
-#   SKIP_SERVING=1 ./scripts/dev-up.sh   # terraform apply only (no ACR image path)
+#   SKIP_SERVING=1 ./scripts/dev-up.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

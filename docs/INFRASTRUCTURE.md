@@ -134,7 +134,7 @@ Target: low double-digit USD/month if left mostly idle.
 
 | Resource | Rough monthly (idle) |
 |---|---|
-| AI Search Basic | ~$75 (largest fixed cost — tear down when not demoing) |
+| AI Search Basic | ~$75 (largest fixed cost) |
 | AI Services / model deployments | Pay-per-token; near $0 when idle (watch TPM quota) |
 | Storage + Key Vault | <$5 |
 | Log Analytics | <$5 at low ingest |
@@ -143,14 +143,13 @@ Target: low double-digit USD/month if left mostly idle.
 | Serving Container App | Pay per vCPU-s / GiB-s when replicas > 0 |
 | VNet | Negligible |
 
-**Budget alert:** configure on the target subscription before first apply (suggested £50/month). Destroy `dev` when not demoing (AI Search Basic is the largest idle cost):
+**Budget alert:** set on the subscription before first apply (example threshold £50/month).
 
 ```bash
 CONFIRM_DESTROY=1 ./scripts/dev-down.sh
-# equivalent: cd terraform/envs/dev && terraform destroy
 ```
 
-Bring it back with `./scripts/dev-up.sh` (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
+Default path deletes the env resource group, then clears Terraform state. `MODE=terraform` runs `terraform destroy` only. Recreate with `./scripts/dev-up.sh` ([`DEPLOYMENT.md`](DEPLOYMENT.md)).
 
 ## Foundry check
 
@@ -170,7 +169,6 @@ Terraform dependency order inside apply: RG → (network, storage, KV, search, f
 
 ```bash
 CONFIRM_DESTROY=1 ./scripts/dev-down.sh
-# or: cd terraform/envs/<env> && terraform destroy
 ```
 
-Remote state (`rg-csa-tfstate-uks`) is kept so the next `./scripts/dev-up.sh` / `terraform apply` can recreate the env.
+Remote state (`rg-csa-tfstate-uks`) is retained.
