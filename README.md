@@ -6,7 +6,7 @@ Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, m
 |---|---|
 | RAG / vector store | Azure AI Search index (`corpus-tuned`); hybrid keyword + vector (`vectorQueries`); embeddings `text-embedding-3-small` |
 | Ingestion | Blob corpus → indexer → skillsets (chunk + embed) → citation fields (`framework` / `section` / `title`) |
-| Agent + tools | Foundry Agent Service; Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
+| Agent + tools | Foundry Agent Service (`gpt-5-mini`); Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
 | Application | Chat UI + BFF on Azure Container Apps; HTTP scale (incl. toward zero); Key Vault + user-assigned MI; Entra to Foundry |
 | Observability | BFF OpenTelemetry → Application Insights; Foundry Control Plane traces (latency, tokens, estimated cost) |
 | Safety | Foundry RAI / content filters (`csa-blocking-medium`); jailbreak / XPIA / PII instruction guards; red-team notes |
@@ -14,22 +14,6 @@ Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, m
 | Cost / ops | Tool-path routing (Function vs Search); Terraform `dev`/`staging`/`prod`; `dev-up` / `dev-down` |
 
 Answers standards questions from a public corpus (WAF, ASB / MCSB, NIST, Terraform docs); defers outside knowledge (e.g. live pricing).
-
-## Azure stack
-
-| Layer | What we use |
-|---|---|
-| Platform | Microsoft Foundry (`ais-csa-*` / `proj-csa-*`) |
-| Model | `gpt-5-mini` + `text-embedding-3-small` |
-| Retrieval | Azure AI Search (`corpus-tuned`) — vector fields + hybrid (keyword + `vectorQueries`) |
-| Agent | Foundry Agent Service |
-| Tools | AI Search tool; Azure Functions (ASB version, Terraform Registry proxy) |
-| App | Azure Container Apps (chat UI + BFF) |
-| Secrets | Key Vault + user-assigned managed identity |
-| Guardrails | Foundry RAI policy `csa-blocking-medium` + instruction guards |
-| Observability | Foundry Traces / Control Plane → Application Insights; BFF OpenTelemetry |
-| Evaluation | Golden set in repo + Foundry cloud Evaluations |
-| IaC | Terraform (`dev` / `staging` / `prod`) |
 
 ## Architecture
 
@@ -100,65 +84,53 @@ Details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Cost notes: [`docs/INFRASTR
 
 ## Agent flow
 
-1. **Retrieve (RAG)** — hybrid Search on `corpus-tuned` (keyword + vector / embeddings) for WAF / ASB / NIST / Terraform guidance; cite `framework` / `section` / `title`.
-2. **ASB version** — Azure Function `get_asb_version` (live tool, not corpus).
-3. **Terraform Registry** — dedicated Function proxies `registry.terraform.io` for provider/module versions.
-4. **Multi-tool** — comparisons may call several tools in one turn.
-5. **Defer** — pricing, live inventory, or no evidence: outside knowledge.
+1. Retrieve — hybrid Search (`corpus-tuned`) for guidance; cite `framework` / `section` / `title`.
+2. ASB version — Function `get_asb_version` (live, not corpus).
+3. Terraform Registry — Function proxies `registry.terraform.io`.
+4. Multi-tool — comparisons may call several tools in one turn.
+5. Defer — pricing, live inventory, or no evidence: outside knowledge.
 
-Deploy: [`agents/`](agents/), [`tools/`](tools/).
+[`agents/`](agents/), [`tools/`](tools/).
 
 ![Chat UI — live Registry tool + trace id](docs/screenshots/ui-ask-live-tool.png)
 
 ## Observability
 
-- **UI / BFF:** each `/api/ask` returns a `trace_id`; the bubble shows tool path (e.g. `live-tool`) and a short trace prefix. BFF exports OpenTelemetry to Application Insights (`appi-csa-{env}`).
-- **Foundry:** Control Plane **Traces** show duration, tokens in/out, and portal estimated cost per turn (same App Insights workspace when linked).
+UI returns `trace_id` (and tool path) on `/api/ask`. Foundry Control Plane traces show latency, tokens, and estimated cost. Join BFF + agent: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md).
 
 ![Foundry Traces — tokens and estimated cost](docs/screenshots/foundry-traces.png)
 
-How to join BFF and agent spans: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md).
-
 ## Evaluation
 
-**Repo / CI:** [`eval/golden_set.jsonl`](eval/golden_set.jsonl) (≥50 rows). Metrics via Foundry evaluators / chat judge: groundedness, relevance, safety. Schema gate: `eval/scripts/validate-golden-set.py` (`.github/workflows/eval.yml`). Laptop runner: `eval/scripts/run_eval.py`.
-
-**Foundry cloud:** golden rows upload into the project; runs appear under **Evaluation** (e.g. `csa-agent-cloud-eval`). Baseline smoke (agent **v9**, run `smoke-20260910T070613Z`): overall **60%** (coherence / relevance 3/5). Runbook: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md).
+Golden set + CI: [`eval/golden_set.jsonl`](eval/golden_set.jsonl), [`.github/workflows/eval.yml`](.github/workflows/eval.yml). Cloud runs: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md). Smoke baseline (agent **v9**, `smoke-20260910T070613Z`): **60%** coherence / relevance.
 
 ![Foundry Evaluations list](docs/screenshots/foundry-evaluations-list.png)
 
 ![Cloud eval run summary](docs/screenshots/foundry-evaluation-run.png)
 
-Local smoke notes: [`eval/FAILURE-ANALYSIS.md`](eval/FAILURE-ANALYSIS.md).
-
 ## Cost
 
-| Path | When | Relative cost |
-|------|------|----------------|
-| Function / Registry only | ASB version, azurerm versions | Lower — short tool JSON + short completion |
-| Search + synthesis | Standards guidance, comparisons | Higher — retrieved chunks in context |
+| Path | Relative cost |
+|------|----------------|
+| Function / Registry only | Lower |
+| Search + synthesis | Higher |
 
-Instructions route version questions to live tools and guidance to Search ([`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md)). Use Cost Analysis or [Azure pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for amounts. Foundry Traces show per-turn estimated cost when App Insights is linked.
-
-Fixed cost is driven mainly by AI Search Basic. Tear down with `CONFIRM_DESTROY=1 ./scripts/dev-down.sh` when the environment is not required.
+Detail: [`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md). AI Search Basic is the main fixed cost — tear down with `dev-down` when unused.
 
 ## Safety
 
-Foundry RAI policy **`csa-blocking-medium`** (Prompt + Completion Blocking at Medium, Jailbreak) on `gpt-5-mini`, referenced from the agent `rai_config`. Instructions enforce cite-or-defer, XPIA resistance, and PII refusal. Red-team table (including a jailbreak blocked by `content_filter`): [`safety/RED-TEAM.md`](safety/RED-TEAM.md).
+RAI policy on the chat deployment + instruction guards. Red-team table: [`safety/RED-TEAM.md`](safety/RED-TEAM.md). Policy notes: [`safety/content-safety.md`](safety/content-safety.md).
 
 ## Design decisions
 
-- **Terraform Registry via Azure Function** — Foundry OpenAPI did not reliably call `registry.terraform.io` directly; a Function proxy provides a stable URL and deploy unit.
-- **AI Search Basic** — largest fixed cost in `dev`; environment tear-down removes it when unused. Serving uses consumption scale (min replicas 0).
-- **Tool routing** — version questions use Functions; standards guidance uses Search (see cost notes).
-- **Session map in the BFF** — in-process `session_id` → Foundry `conversation_id`; not shared across replicas ([`serving/ISOLATION.md`](serving/ISOLATION.md)).
-- **Trace join** — BFF `trace_id` and Foundry conversation id; W3C parent may not be shared across Foundry Control Plane and the BFF.
-- **RAI** — agent `rai_config` requires the content-filter policy ARM resource id.
-- **Evaluation** — repo/CI golden set plus Foundry cloud Evaluation runs; smoke baseline recorded at 60% coherence/relevance.
+- **Registry via Function** — Foundry OpenAPI did not reliably call `registry.terraform.io` directly.
+- **Session map** — BFF `session_id` → Foundry `conversation_id` in-process; not shared across replicas ([`serving/ISOLATION.md`](serving/ISOLATION.md)).
+- **Trace join** — BFF and Foundry may not share one W3C parent; use `trace_id` + conversation id.
+- **RAI ARM id** — agent `rai_config` needs the content-filter policy resource id (name alone is rejected).
 
 ## Demo video
 
-Add a short recording (multi-step ask, e.g. compare two standards or ASB version + citation) and link it here when ready.
+Add a short recording (multi-step ask) and link it here when ready.
 
 ## License
 
