@@ -128,10 +128,6 @@ RAI policy on the chat deployment + instruction guards. Red-team table: [`safety
 - **Trace join** — BFF and Foundry may not share one W3C parent; use `trace_id` + conversation id.
 - **RAI ARM id** — agent `rai_config` needs the content-filter policy resource id (name alone is rejected).
 
-## Demo video
-
-Add a short recording (multi-step ask) and link it here when ready.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
