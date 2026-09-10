@@ -34,7 +34,7 @@ variable "search_principal_id" {
 
 variable "foundry_project_principal_id" {
   type        = string
-  description = "System-assigned identity of the Foundry project (Azure AI Search agent tool)."
+  description = "System-assigned identity of the Foundry project (Search tool + Datasets/Eval blob access)."
 }
 
 variable "foundry_account_principal_id" {
