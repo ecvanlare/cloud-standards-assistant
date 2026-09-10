@@ -118,8 +118,6 @@ Baseline smoke (agent **v9**, run `smoke-20260910T070613Z`): overall **60%** (co
 
 ![Cloud eval run summary](docs/screenshots/foundry-evaluation-run.png)
 
-![Per-row Pass/Fail](docs/screenshots/foundry-evaluation-rows.png)
-
 Local smoke notes: [`eval/FAILURE-ANALYSIS.md`](eval/FAILURE-ANALYSIS.md).
 
 ## Cost
