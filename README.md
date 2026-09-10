@@ -88,11 +88,11 @@ Metrics (Foundry / `azure-ai-evaluation`): **groundedness**, **relevance**, **sa
 
 ## Cost
 
-Idle infra notes remain in [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md). Per-request latency / tokens / cost views: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) (Application Insights `appi-csa-{env}` + Foundry Control Plane tracing).
+Idle infra notes remain in [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md). Per-request latency / tokens / cost views: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) (Application Insights `appi-csa-{env}` + Foundry Control Plane tracing). Tool-path tiering and before/after notes: [`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md).
 
 ## Safety
 
-> Content Safety red-team deep dive remains Phase 6. AZP-8 includes evaluator **safety** scores in the eval runner; see `eval/` and `safety/README.md`.
+Content Safety is Foundry **RAI content filters** (`csa-blocking-medium` on `gpt-5-mini`) plus instruction guards (citation, XPIA, PII). Config and red-team: [`safety/`](safety/) ([`content-safety.md`](safety/content-safety.md), [`RED-TEAM.md`](safety/RED-TEAM.md)). Apply with `./safety/scripts/apply-rai-policy.sh` then `./agents/scripts/deploy-agent.sh`.
 
 ## Trade-offs and lessons learned
 

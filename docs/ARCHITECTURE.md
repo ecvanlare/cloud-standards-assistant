@@ -20,6 +20,8 @@ flowchart LR
 
 Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md).
 
+**Content Safety** in the diagram is the Foundry account **RAI / content-filter policy** (`csa-blocking-medium`: Prompt + Completion Blocking at Medium, plus Jailbreak) attached to the chat deployment and referenced from the agent `rai_config`. Instruction-level cite-or-defer, XPIA, and PII rules live in [`agents/instructions.md`](../agents/instructions.md). Details: [`safety/content-safety.md`](../safety/content-safety.md).
+
 ## Agent flow
 
 The agent runs on **Foundry Agent Service**. Conversation state is a Foundry **conversation**; each user turn is a **response** (OpenAI Responses API via the project client). The model may call **one or more tools** in a loop before the final message.
