@@ -139,4 +139,6 @@ module "container_app" {
   max_replicas                           = var.serving_max_replicas
   concurrent_requests                    = var.serving_concurrent_requests
   tags                                   = local.tags
+
+  depends_on = [module.key_vault]
 }

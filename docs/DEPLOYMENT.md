@@ -28,11 +28,10 @@ Local scripts prove the stack on a laptop. Enterprise delivery runs the same ste
 **Local (dev):**
 
 ```bash
-# Day-to-day recreate / tear-down (after tfvars + state bootstrap once)
 ./scripts/dev-up.sh
 CONFIRM_DESTROY=1 ./scripts/dev-down.sh
 
-# Or step-by-step:
+# Step-by-step:
 cd terraform/envs/dev && terraform apply
 ./tools/scripts/deploy-function.sh
 ./tools/scripts/deploy-registry-function.sh
@@ -43,7 +42,7 @@ cd terraform/envs/dev && terraform apply
 # Or open terraform output -raw serving_url in a browser
 ```
 
-`dev-up.sh` chains Terraform + Functions + Search + agent + serving. Flags: `SKIP_SEARCH=1`, `SKIP_AGENT=1`, `SKIP_SERVING=1`, `SKIP_RAI=0` (RAI off by default). Idle cost is dominated by AI Search — destroy when not demoing.
+`dev-up.sh` runs Terraform, Functions, Search, agent, and serving. Flags: `SKIP_SEARCH=1`, `SKIP_AGENT=1`, `SKIP_SERVING=1`, `SKIP_RAI=0`.
 
 **Enterprise:** the same order as jobs in one workflow (or separate workflows with `needs:`), with GitHub Environments (`dev` → `staging` → `prod`) and approval before prod.
 
@@ -155,11 +154,6 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 | `docs/INFRASTRUCTURE.md` | Infra inventory including Function App + App Insights | CMDB / infra diagram from Terraform state |
 | `.cursor/rules/terraform.mdc` | Do not enable plan without OIDC | Repo policy + required CI checks before merge |
 
-## Why scripts first (portfolio)
+## Scripts and pipelines
 
-- AZP-3 / AZP-8: prove tools and eval/obs on **dev**, not ship full CD.
-- Workflows need Azure OIDC (federated credential + secrets) before `plan`/`apply` or live eval can run in Actions.
-- Deploy is five surfaces (Terraform, Search, Function, agent, serving); scripts mirror that split while wiring is still moving.
-- Laptop loop is faster for OpenAPI URL / agent tool debugging than push-and-wait.
-
-Scripts are ops glue, not the product app. When CD lands, call the same Python/bash from workflow steps — do not rewrite the contracts.
+Deploy scripts cover five surfaces (Terraform, Search, Functions, agent, serving). Pipelines should call the same entrypoints with OIDC; do not duplicate product contracts in workflow YAML.

@@ -77,13 +77,13 @@ Bring the stack up (infra + Functions + Search + agent + serving):
 # UI: terraform -chdir=terraform/envs/dev output -raw serving_url
 ```
 
-Tear down when idle (AI Search Basic dominates cost):
+Tear down:
 
 ```bash
 CONFIRM_DESTROY=1 ./scripts/dev-down.sh
 ```
 
-Step-by-step map: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Idle cost notes: [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md).
+Details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Cost notes: [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md).
 
 ## Agent flow
 
@@ -110,9 +110,7 @@ How to join BFF and agent spans: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md
 
 **Repo / CI:** [`eval/golden_set.jsonl`](eval/golden_set.jsonl) (≥50 rows). Metrics via Foundry evaluators / chat judge: groundedness, relevance, safety. Schema gate: `eval/scripts/validate-golden-set.py` (`.github/workflows/eval.yml`). Laptop runner: `eval/scripts/run_eval.py`.
 
-**Foundry cloud:** golden rows upload into the project; runs appear under **Evaluation** (e.g. `csa-agent-cloud-eval`). Runbook: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md).
-
-Baseline smoke (agent **v9**, run `smoke-20260910T070613Z`): overall **60%** (coherence / relevance 3/5). Honest baseline — strength is portal-visible cloud eval plus CI gates, with room to improve retrieval/synthesis.
+**Foundry cloud:** golden rows upload into the project; runs appear under **Evaluation** (e.g. `csa-agent-cloud-eval`). Baseline smoke (agent **v9**, run `smoke-20260910T070613Z`): overall **60%** (coherence / relevance 3/5). Runbook: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md).
 
 ![Foundry Evaluations list](docs/screenshots/foundry-evaluations-list.png)
 
@@ -127,23 +125,23 @@ Local smoke notes: [`eval/FAILURE-ANALYSIS.md`](eval/FAILURE-ANALYSIS.md).
 | Function / Registry only | ASB version, azurerm versions | Lower — short tool JSON + short completion |
 | Search + synthesis | Standards guidance, comparisons | Higher — retrieved chunks in context |
 
-Instructions route version questions to live tools and guidance to Search ([`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md)). Do not invent list prices; use Cost Analysis or [Azure pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/). Foundry Traces show per-turn estimated £ when App Insights is linked.
+Instructions route version questions to live tools and guidance to Search ([`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md)). Use Cost Analysis or [Azure pricing](https://azure.microsoft.com/pricing/details/cognitive-services/openai-service/) for amounts. Foundry Traces show per-turn estimated cost when App Insights is linked.
 
-Idle: Search Basic is the largest fixed cost — `CONFIRM_DESTROY=1 ./scripts/dev-down.sh` when not demoing.
+Fixed cost is driven mainly by AI Search Basic. Tear down with `CONFIRM_DESTROY=1 ./scripts/dev-down.sh` when the environment is not required.
 
 ## Safety
 
 Foundry RAI policy **`csa-blocking-medium`** (Prompt + Completion Blocking at Medium, Jailbreak) on `gpt-5-mini`, referenced from the agent `rai_config`. Instructions enforce cite-or-defer, XPIA resistance, and PII refusal. Red-team table (including a jailbreak blocked by `content_filter`): [`safety/RED-TEAM.md`](safety/RED-TEAM.md).
 
-## Trade-offs and lessons learned
+## Design decisions
 
-- **Registry via Function, not direct OpenAPI** — Foundry did not reliably call `registry.terraform.io`; a thin Azure Function proxy kept a dedicated URL and deploy unit.
-- **Search SKU dominates idle spend** — tear down `dev` between demos; serving already scales toward zero.
-- **Tool-path routing cuts waste** — version asks should not pay for hybrid retrieval.
-- **In-memory sessions on ACA** — fine for a single-replica demo; scale-out can start a new Foundry conversation without leaking another user’s id ([`serving/ISOLATION.md`](serving/ISOLATION.md)).
-- **BFF and Foundry traces may not share one W3C parent** — use `trace_id` + `conversation_id` to join.
-- **RAI on the agent needs the policy ARM id** — a short name alone is rejected by Agent Service.
-- **Cloud eval at 60% is a baseline** — portal visibility and CI matter more for the portfolio than a polished vanity score on day one.
+- **Terraform Registry via Azure Function** — Foundry OpenAPI did not reliably call `registry.terraform.io` directly; a Function proxy provides a stable URL and deploy unit.
+- **AI Search Basic** — largest fixed cost in `dev`; environment tear-down removes it when unused. Serving uses consumption scale (min replicas 0).
+- **Tool routing** — version questions use Functions; standards guidance uses Search (see cost notes).
+- **Session map in the BFF** — in-process `session_id` → Foundry `conversation_id`; not shared across replicas ([`serving/ISOLATION.md`](serving/ISOLATION.md)).
+- **Trace join** — BFF `trace_id` and Foundry conversation id; W3C parent may not be shared across Foundry Control Plane and the BFF.
+- **RAI** — agent `rai_config` requires the content-filter policy ARM resource id.
+- **Evaluation** — repo/CI golden set plus Foundry cloud Evaluation runs; smoke baseline recorded at 60% coherence/relevance.
 
 ## Demo video
 
