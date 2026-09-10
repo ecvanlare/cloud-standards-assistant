@@ -1,6 +1,6 @@
 # Content Safety (RAI) configuration
 
-Foundry AI Services account content filters (Responsible AI / RAI policies) guard **prompts** and **completions**. This portfolio does **not** deploy a separate Azure AI Content Safety Cognitive resource; filters run on the Foundry account and the chat deployment the agent uses.
+Foundry AI Services account content filters (Responsible AI / RAI policies) guard **prompts** and **completions**. This repo does **not** deploy a separate Azure AI Content Safety Cognitive resource; filters run on the Foundry account and the chat deployment the agent uses.
 
 ## Policy in use
 
