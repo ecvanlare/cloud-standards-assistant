@@ -65,3 +65,4 @@ agents/.last-deploy.json
 
 # Azure Functions local settings
 tools/functions/**/local.settings.json
+serving/evidence/*.log

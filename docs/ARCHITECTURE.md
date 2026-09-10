@@ -18,7 +18,7 @@ flowchart LR
     A --> R[Answer + citation]
 ```
 
-Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md).
+Control Plane is the Foundry ops plane (portal + platform), not a separate compute SKU. Telemetry is OpenTelemetry-shaped and lands in Application Insights — see [`docs/OBSERVABILITY.md`](OBSERVABILITY.md). The serving Container App BFF also exports to the same App Insights resource; join keys and limits are documented there.
 
 **Content Safety** in the diagram is the Foundry account **RAI / content-filter policy** (`csa-blocking-medium`: Prompt + Completion Blocking at Medium, plus Jailbreak) attached to the chat deployment and referenced from the agent `rai_config`. Instruction-level cite-or-defer, XPIA, and PII rules live in [`agents/instructions.md`](../agents/instructions.md). Details: [`safety/content-safety.md`](../safety/content-safety.md).
 
@@ -70,6 +70,12 @@ Corpus blobs in the private storage `corpus` container are indexed by Azure AI S
 Public corpus sources (WAF, Azure Security Benchmark, NIST, Terraform) are fetched by [`search/scripts/fetch-corpus.sh`](../search/scripts/fetch-corpus.sh); see [INFRASTRUCTURE.md](INFRASTRUCTURE.md#corpus-sources). Foundry IQ managed grounding remains out of scope.
 
 Details and scripts: [`search/`](../search/). Chunking comparison: [`search/CHUNKING.md`](../search/CHUNKING.md). Agent deploy: [`agents/`](../agents/).
+
+## App layer (Container Apps)
+
+The **agent** runs on **Foundry Agent Service**. The **user-facing app** (chatbot UI + BFF) runs on **Azure Container Apps** (`cae-*`): HTTP autoscaling, Key Vault secrets via managed identity, Entra auth to Foundry.
+
+One image serves UI + BFF (`serving/`). Conversations are per client session ([`serving/ISOLATION.md`](../serving/ISOLATION.md)). Scale rules: `terraform/modules/container_app/`.
 
 ## Environments
 

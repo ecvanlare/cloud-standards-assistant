@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloud Standards Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="top">
+      <div>
+        <p class="eyebrow">Microsoft Foundry · UK South</p>
+        <h1>Cloud Standards Assistant</h1>
+      </div>
+      <div class="session">
+        <span id="sessionLabel">Session</span>
+        <code id="sessionId">—</code>
+        <button type="button" id="newSession" class="ghost">New session</button>
+      </div>
+    </header>
+
+    <main class="thread" id="thread" aria-live="polite"></main>
+
+    <footer class="composer">
+      <form id="askForm">
+        <label class="sr-only" for="question">Ask a standards question</label>
+        <textarea id="question" rows="2" placeholder="Ask about WAF, ASB/MCSB, NIST, or Terraform…" required></textarea>
+        <div class="composer-actions">
+          <p class="hint">Enter to send · Shift+Enter for a new line. Corpus answers need citations.</p>
+          <button type="submit" id="send">Ask</button>
+        </div>
+      </form>
+    </footer>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

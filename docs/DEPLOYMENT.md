@@ -5,12 +5,13 @@ Local scripts prove the stack on a laptop. Enterprise delivery runs the same ste
 ## Deploy order (same either way)
 
 ```text
-1. Terraform apply                  →  provisions ASB + Registry Function App shells + URLs
+1. Terraform apply                  →  provisions Function shells, ACR, serving Container App (+ URLs)
 2. deploy-function.sh               →  ASB Function code
 3. deploy-registry-function.sh      →  Registry Function code
 4. deploy-search.sh                 →  (if needed) keeps Search tool working
 5. deploy-agent.sh                  →  registers tools on Foundry using outputs from (1)
-6. run-demo.sh                      →  proves the right tool was chosen
+6. deploy-serving.sh                →  ACR build/push + refresh serving app (if image not yet applied)
+7. run-demo.sh / browser UI         →  proves tools + serving path
 ```
 
 | Today (local) | Enterprise (pipeline) |
@@ -20,19 +21,29 @@ Local scripts prove the stack on a laptop. Enterprise delivery runs the same ste
 | `deploy-registry-function.sh` | CI job: build/zip-deploy Registry Function + smoke |
 | `deploy-search.sh` | CI job: index/skillset deploy + indexer run |
 | `deploy-agent.sh` | CI job: promote Foundry agent version per env |
+| `deploy-serving.sh` | CI job: ACR build + Container App revision + smoke |
 | `run-demo.sh` | Post-deploy eval / synthetic monitoring suite |
 | `TRACE.md` (manual) | Observability dashboard + automated eval reports |
 
 **Local (dev):**
 
 ```bash
+# Day-to-day recreate / tear-down (after tfvars + state bootstrap once)
+./scripts/dev-up.sh
+CONFIRM_DESTROY=1 ./scripts/dev-down.sh
+
+# Or step-by-step:
 cd terraform/envs/dev && terraform apply
 ./tools/scripts/deploy-function.sh
 ./tools/scripts/deploy-registry-function.sh
 ./search/scripts/deploy-search.sh   # only if search/ or corpus changed
 ./agents/scripts/deploy-agent.sh
+./serving/scripts/deploy-serving.sh
 ./agents/scripts/run-demo.sh "What is the current Azure Security Benchmark version?"
+# Or open terraform output -raw serving_url in a browser
 ```
+
+`dev-up.sh` chains Terraform + Functions + Search + agent + serving. Flags: `SKIP_SEARCH=1`, `SKIP_AGENT=1`, `SKIP_SERVING=1`, `SKIP_RAI=0` (RAI off by default). Idle cost is dominated by AI Search — destroy when not demoing.
 
 **Enterprise:** the same order as jobs in one workflow (or separate workflows with `needs:`), with GitHub Environments (`dev` → `staging` → `prod`) and approval before prod.
 
@@ -121,13 +132,26 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 | `docs/FOUNDRY-EVAL.md` | Storage RBAC, dual-path eval, cost warning | Internal eval runbook |
 | `docs/OBSERVABILITY.md` | App Insights + Control Plane wiring | Shared dashboards / alerts from workbook |
 
+### `serving/` — Container Apps UI + BFF
+
+| File | Today | Enterprise replacement |
+|------|-------|------------------------|
+| `serving/app/main.py` | FastAPI BFF → Foundry conversations | Same app; optional Redis session store |
+| `serving/app/static/` | Owned chatbot UI | Design-system skin; same `/api/ask` contract |
+| `serving/Dockerfile` | Image for ACR | Multi-stage CI build + signed digest |
+| `serving/scripts/deploy-serving.sh` | ACR build + Terraform apply + smoke | Pipeline: build → push → revise Container App |
+| `serving/scripts/load-concurrent.sh` | Concurrent `/health` for scale evidence | Load test job + Metrics alert |
+| `serving/ISOLATION.md` | Per-session conversation note | Security design record |
+| `terraform/modules/acr/` | Basic ACR + deployer AcrPush | Premium / geo / private link as needed |
+| `terraform/modules/container_app/` | App + HTTP scale + KV secret ref | Same module; higher max replicas in prod |
+
 ### CI/CD and docs
 
 | File | Today | Enterprise replacement |
 |------|-------|------------------------|
 | `.github/workflows/terraform-ci.yml` | PR: fmt + validate; plan commented out | Full CI/CD: plan on PR, apply on merge, OIDC, env gates |
 | `.github/workflows/eval.yml` | Validates `golden_set.jsonl` (≥50) | Live evaluator job with OIDC + fail on score drop |
-| `docs/ARCHITECTURE.md` | Architecture + tool decision rules | Living architecture (ADR/C4), synced from code where possible |
+| `docs/ARCHITECTURE.md` | Architecture + app layer (ACA) | Living architecture (ADR/C4), synced from code where possible |
 | `docs/INFRASTRUCTURE.md` | Infra inventory including Function App + App Insights | CMDB / infra diagram from Terraform state |
 | `.cursor/rules/terraform.mdc` | Do not enable plan without OIDC | Repo policy + required CI checks before merge |
 
@@ -135,7 +159,7 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 
 - AZP-3 / AZP-8: prove tools and eval/obs on **dev**, not ship full CD.
 - Workflows need Azure OIDC (federated credential + secrets) before `plan`/`apply` or live eval can run in Actions.
-- Deploy is four surfaces (Terraform, Search, Function, agent); scripts mirror that split while wiring is still moving.
+- Deploy is five surfaces (Terraform, Search, Function, agent, serving); scripts mirror that split while wiring is still moving.
 - Laptop loop is faster for OpenAPI URL / agent tool debugging than push-and-wait.
 
 Scripts are ops glue, not the product app. When CD lands, call the same Python/bash from workflow steps — do not rewrite the contracts.
