@@ -84,6 +84,7 @@ def main() -> int:
         response = openai_client.responses.create(
             conversation=conversation.id,
             extra_body={"agent_reference": agent_ref},
+            max_output_tokens=int(os.environ.get("MAX_OUTPUT_TOKENS", "4000")),
         )
 
     answer = getattr(response, "output_text", None) or ""

@@ -46,6 +46,16 @@ def main() -> int:
         "--registry-function-base-url",
         default=os.environ.get("REGISTRY_FUNCTION_BASE_URL", ""),
     )
+    parser.add_argument(
+        "--rai-policy-name",
+        default=os.environ.get("RAI_POLICY_NAME", "csa-blocking-medium"),
+        help="RAI policy short name or full ARM resource ID (empty to omit)",
+    )
+    parser.add_argument(
+        "--rai-policy-id",
+        default=os.environ.get("RAI_POLICY_ID", ""),
+        help="Full ARM ID of the RAI policy (preferred for agent create)",
+    )
     args = parser.parse_args()
 
     if not args.project_endpoint:
@@ -79,6 +89,7 @@ def main() -> int:
         OpenApiFunctionDefinition,
         OpenApiTool,
         PromptAgentDefinition,
+        RaiConfig,
     )
 
     query_map = {
@@ -131,13 +142,20 @@ def main() -> int:
         )
         print(f"Attached OpenAPI tool: {cfg.get('name') or key}")
 
+    definition_kwargs: dict = {
+        "model": model,
+        "instructions": instructions,
+        "tools": tools,
+    }
+    rai_ref = (args.rai_policy_id or args.rai_policy_name or "").strip()
+    rai_short = args.rai_policy_name.strip() if args.rai_policy_name else None
+    if rai_ref:
+        definition_kwargs["rai_config"] = RaiConfig(rai_policy_name=rai_ref)
+        print(f"RAI policy: {rai_short or rai_ref}")
+
     agent = client.agents.create_version(
         agent_name=agent_name,
-        definition=PromptAgentDefinition(
-            model=model,
-            instructions=instructions,
-            tools=tools,
-        ),
+        definition=PromptAgentDefinition(**definition_kwargs),
         description=definition.get("description") or display_name,
         metadata={"display_name": display_name},
     )
@@ -153,6 +171,7 @@ def main() -> int:
         "function_base_url": args.function_base_url.rstrip("/"),
         "registry_function_base_url": args.registry_function_base_url.rstrip("/"),
         "tool_count": len(tools),
+        "rai_policy_name": rai_short or (None if not rai_ref else "custom"),
     }
     (AGENTS_DIR / ".last-deploy.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(out, indent=2))
