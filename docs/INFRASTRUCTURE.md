@@ -1,6 +1,6 @@
 # Infrastructure
 
-Phase 1 foundation for the Cloud & DevOps Standards Assistant on Azure, region **UK South**.
+Azure resources for the Cloud & DevOps Standards Assistant, region **UK South**.
 
 ## Architecture
 
@@ -124,9 +124,9 @@ SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
 
 | Environment | Purpose | Notes |
 |---|---|---|
-| dev | Iteration | Basic Search, no KV purge protection — **applied in Phase 1** |
-| staging | Pre-prod | Same topology as prod at Basic Search — plan-ready, not applied yet |
-| prod | Demo-facing | Standard Search, KV purge protection — plan-ready, not applied yet |
+| dev | Iteration | Basic Search, no KV purge protection; tear down when unused |
+| staging | Pre-prod | Same topology as prod at Basic Search — Terraform ready, not applied |
+| prod | Production-shaped | Standard Search, KV purge protection — Terraform ready, not applied |
 
 ## Cost estimate (idle `dev`, rough)
 

@@ -37,15 +37,11 @@ Question: *What are the five pillars of the Azure Well-Architected Framework?*
 
 Expected steps: `azure_ai_search_*` → cited `framework` / `section` / `title`. Relative cost: **higher** (retrieval chunks in context + longer synthesis).
 
-Session note (2026-09-10): several Responses API turns completed with reasoning-only “I’ll look that up” and **no tool call** under both v9 and v11 — treat as platform flakiness for that day; use TRACE / playground when capturing a full Search cost sample. Routing rules in instructions remain the intended optimisation.
-
 ## Prompt caching
 
-For **Foundry Agent Service + `gpt-5-mini`**, this portfolio does **not** configure a separate prompt-cache service. Azure OpenAI–style automatic prompt caching (when offered for a model/API) is **not relied on** for Agents in our scripts: we do not set cache headers or measure cache-hit tokens in `run_demo.py`.
+For **Foundry Agent Service + `gpt-5-mini`**, this repo does **not** configure a separate prompt-cache service. Azure OpenAI–style automatic prompt caching (when offered for a model/API) is **not relied on** for Agents in our scripts: we do not set cache headers or measure cache-hit tokens in `run_demo.py`.
 
 **Optimisation that *is* in scope:** avoid Search on version lookups (Sample A) so input tokens stay small regardless of cache.
-
-If Microsoft later exposes cache-hit metrics on agent traces, add them under [`OBSERVABILITY.md`](OBSERVABILITY.md) and refresh this table.
 
 ## How to refresh numbers
 

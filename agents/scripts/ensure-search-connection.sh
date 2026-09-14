@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ensure Foundry project has an AAD connection to Azure AI Search (management plane).
+# Ensure Foundry project has an Entra ID connection to Azure AI Search (management plane).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

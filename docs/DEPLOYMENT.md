@@ -61,12 +61,12 @@ What gets replaced first: `_common.sh` output loading, `deploy-*.sh` wrappers, m
 
 | Stage | You run | Enterprise runs |
 |-------|---------|-----------------|
-| Portfolio (now) | Shell commands on laptop | — |
+| Local laptop | Shell commands | — |
 | Team dev | PR merges; workflow deploys **dev** | `deploy-dev.yml` + OIDC |
 | Staging | Tag or merge to staging | Workflow + approval + smoke eval |
 | Prod | Rare manual promote | Workflow + change ticket + eval gate + rollback |
 
-CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-ci.yml) runs fmt/validate only. `terraform plan` stays commented until Azure OIDC secrets exist (see [`.cursor/rules/terraform.mdc`](../.cursor/rules/terraform.mdc)).
+CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-ci.yml) runs fmt/validate only. `terraform plan` stays commented until Azure OIDC is wired.
 
 ## File → enterprise replacement
 
@@ -152,7 +152,7 @@ CI today: [`.github/workflows/terraform-ci.yml`](../.github/workflows/terraform-
 | `.github/workflows/eval.yml` | Validates `golden_set.jsonl` (≥50) | Live evaluator job with OIDC + fail on score drop |
 | `docs/ARCHITECTURE.md` | Architecture + app layer (ACA) | Living architecture (ADR/C4), synced from code where possible |
 | `docs/INFRASTRUCTURE.md` | Infra inventory including Function App + App Insights | CMDB / infra diagram from Terraform state |
-| `.cursor/rules/terraform.mdc` | Do not enable plan without OIDC | Repo policy + required CI checks before merge |
+| Branch protection / repo policy | PR-only `main` (see `scripts/setup-branch-protection.sh`); no `terraform plan` in CI until OIDC | Required checks + OIDC before apply |
 
 ## Scripts and pipelines
 

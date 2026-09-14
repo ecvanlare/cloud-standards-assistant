@@ -18,7 +18,7 @@ Index definitions, blob datasource, skillsets (chunk + embed), and hybrid query 
 
 ## Prerequisites
 
-- Phase 1 `dev` stack applied (`terraform/envs/dev`)
+- `dev` stack applied (`terraform/envs/dev`)
 - Search service MI has Storage Blob Data Reader + Cognitive Services User (identity module)
 - Deployer has Search Index Data Contributor on the Search service (identity module — needed to query index documents; Service Contributor alone is not enough)
 - Azure CLI logged in; Terraform state available for outputs
@@ -37,4 +37,4 @@ Index definitions, blob datasource, skillsets (chunk + embed), and hybrid query 
 
 Chunks store `framework`, `section`, `title`, and `source_path`. Upload sets blob Metadata keys `citeframework` / `citesection` / `citetitle`; skillsets project them from `/document/citeframework` (not `metadata_citeframework` — that path is empty for custom keys). Hybrid queries return those fields with the content snippet.
 
-Foundry IQ grounding is out of scope for AZP-6.
+Foundry IQ grounding is out of scope.

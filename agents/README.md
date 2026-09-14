@@ -1,6 +1,6 @@
 # Agents (Foundry Agent Service)
 
-Definition and scripts for the **Cloud & DevOps Standards Assistant** (AZP-7 + AZP-3 tools).
+Definition and scripts for the **Cloud & DevOps Standards Assistant**.
 
 ## Layout
 
@@ -8,7 +8,7 @@ Definition and scripts for the **Cloud & DevOps Standards Assistant** (AZP-7 + A
 |------|------|
 | `standards-assistant.json` | Name, model (`gpt-5-mini`), Search + OpenAPI tool config |
 | `instructions.md` | When to Search vs Function vs Registry vs defer |
-| `scripts/ensure-search-connection.sh` | Foundry project connection → Azure AI Search (AAD) |
+| `scripts/ensure-search-connection.sh` | Foundry project connection → Azure AI Search (Entra ID) |
 | `scripts/deploy-agent.sh` | Upsert connection + create agent version |
 | `scripts/run-demo.sh` | Conversation + response demo |
 
@@ -18,7 +18,7 @@ Conversation state is Foundry **conversations** / **responses**. Deploy copies `
 
 ## Prerequisites
 
-- Phase 1 `dev` stack + Search ingest + both Function Apps applied (`terraform/envs/dev`)
+- `dev` stack applied (`terraform/envs/dev`) with Search ingest and both Function Apps
 - `./tools/scripts/deploy-function.sh` so `/api/asb/version` is live
 - `./tools/scripts/deploy-registry-function.sh` so Registry proxy routes are live
 - Azure CLI logged in; Python packages installed by deploy scripts

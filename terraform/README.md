@@ -23,7 +23,7 @@ SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
 
 Subscription IDs belong in local `terraform.tfvars` / env vars only — not in committed code.
 
-## Apply (dev only for Phase 1)
+## Apply (dev)
 
 ```bash
 cd terraform/envs/dev

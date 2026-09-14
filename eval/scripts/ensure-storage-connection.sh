@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Upsert Foundry project Azure Storage connection (Entra / AAD) for Datasets + Evaluations.
+# Upsert Foundry project Azure Storage connection (Entra ID) for Datasets + Evaluations.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

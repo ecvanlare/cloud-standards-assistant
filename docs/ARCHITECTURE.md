@@ -1,6 +1,6 @@
 # Architecture
 
-> This document is filled in incrementally as each phase lands. Skeleton below mirrors the README's promised sections.
+Platform layout for the Cloud & DevOps Standards Assistant (Microsoft Foundry + Terraform, UK South).
 
 ## Overview
 

@@ -21,7 +21,7 @@ Portal-visible evaluation path for the Cloud Standards Assistant. Repo eval (`ev
 ./eval/scripts/ensure-storage-connection.sh
 ```
 
-Uses the same management-plane pattern as `agents/scripts/ensure-search-connection.sh` (`category: AzureStorageAccount`, `authType: AAD`).
+Uses the same management-plane pattern as `agents/scripts/ensure-search-connection.sh` (`category: AzureStorageAccount`, `authType: AAD` — Entra ID).
 
 ## Smoke run (5–10 rows)
 
