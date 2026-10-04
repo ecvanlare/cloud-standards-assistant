@@ -37,16 +37,34 @@ resource "azurerm_role_assignment" "search_service_contributor" {
   principal_id         = azurerm_user_assigned_identity.this.principal_id
 }
 
-resource "azurerm_role_assignment" "deployer_search_index_data_contributor" {
-  scope                = var.search_service_id
-  role_definition_name = "Search Index Data Contributor"
-  principal_id         = data.azurerm_client_config.current.object_id
+# Whoever applies, plus operators, so a local apply and a CI apply grant the same set.
+locals {
+  operator_ids = toset(distinct(concat([data.azurerm_client_config.current.object_id], var.operator_object_ids)))
+
+  operator_roles = {
+    search_index_data_contributor = { scope = var.search_service_id, role = "Search Index Data Contributor" }
+    search_service_contributor    = { scope = var.search_service_id, role = "Search Service Contributor" }
+    foundry_user                  = { scope = var.cognitive_account_id, role = "Foundry User" }
+    storage_blob_data_contributor = { scope = var.storage_account_id, role = "Storage Blob Data Contributor" }
+  }
+
+  # Keys hash the object ID so plan and apply logs (public CI) do not print it.
+  operator_assignments = {
+    for pair in setproduct(local.operator_ids, keys(local.operator_roles)) :
+    "${substr(sha256(pair[0]), 0, 12)}-${pair[1]}" => {
+      principal_id = pair[0]
+      scope        = local.operator_roles[pair[1]].scope
+      role         = local.operator_roles[pair[1]].role
+    }
+  }
 }
 
-resource "azurerm_role_assignment" "deployer_foundry_user" {
-  scope                = var.cognitive_account_id
-  role_definition_name = "Foundry User"
-  principal_id         = data.azurerm_client_config.current.object_id
+resource "azurerm_role_assignment" "operator" {
+  for_each = local.operator_assignments
+
+  scope                = each.value.scope
+  role_definition_name = each.value.role
+  principal_id         = each.value.principal_id
 }
 
 resource "azurerm_role_assignment" "search_storage_blob_data_reader" {

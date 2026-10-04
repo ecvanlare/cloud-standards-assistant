@@ -66,6 +66,26 @@ output "embedding_deployment_name" {
   value = module.foundry.embedding_deployment_name
 }
 
+output "rai_policy_id" {
+  value = module.foundry.rai_policy_id
+}
+
+output "search_connection_name" {
+  value = module.foundry.search_connection_name
+}
+
+output "storage_connection_name" {
+  value = module.foundry.storage_connection_name
+}
+
+output "storage_account_id" {
+  value = module.storage.id
+}
+
+output "serving_image_tag" {
+  value = var.serving_image_tag
+}
+
 output "container_apps_environment_id" {
   value = module.container_apps_env.id
 }

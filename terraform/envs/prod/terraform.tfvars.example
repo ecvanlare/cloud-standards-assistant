@@ -6,3 +6,5 @@ key_vault_purge_protection_enabled = true
 chat_capacity                      = 50
 agent_capacity                     = 50
 embedding_capacity                 = 20
+# Object IDs of the GitHub deploy identity (and anyone else running Search, agent or eval steps).
+operator_object_ids = ["00000000-0000-0000-0000-000000000000"]

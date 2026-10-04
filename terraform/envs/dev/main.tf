@@ -59,7 +59,15 @@ module "foundry" {
   chat_capacity         = var.chat_capacity
   agent_capacity        = var.agent_capacity
   embedding_capacity    = var.embedding_capacity
-  tags                  = local.tags
+
+  search_service_id                      = module.ai_search.id
+  search_endpoint                        = module.ai_search.endpoint
+  storage_account_id                     = module.storage.id
+  storage_blob_endpoint                  = module.storage.primary_blob_endpoint
+  application_insights_id                = module.monitoring.id
+  application_insights_connection_string = module.monitoring.connection_string
+
+  tags = local.tags
 }
 
 module "container_apps_env" {
@@ -96,6 +104,7 @@ module "identity" {
   search_principal_id          = module.ai_search.principal_id
   foundry_project_principal_id = module.foundry.project_principal_id
   foundry_account_principal_id = module.foundry.account_principal_id
+  operator_object_ids          = var.operator_object_ids
   tags                         = local.tags
 }
 

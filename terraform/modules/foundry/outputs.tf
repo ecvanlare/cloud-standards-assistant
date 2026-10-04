@@ -42,3 +42,15 @@ output "embedding_deployment_name" {
   value = azurerm_cognitive_deployment.embedding.name
 }
 
+output "rai_policy_id" {
+  value = azapi_resource.rai_policy.id
+}
+
+output "search_connection_name" {
+  value = azapi_resource.search_connection.name
+}
+
+output "storage_connection_name" {
+  value = azapi_resource.storage_connection.name
+}
+
