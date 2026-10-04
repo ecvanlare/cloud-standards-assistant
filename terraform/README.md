@@ -1,44 +1,12 @@
 # Terraform
 
-Parameterized modules + three environment roots for the Cloud Standards Assistant.
+All Azure resources for the Standards Assistant, including the Foundry connections and the RAI policy.
 
-## Layout
+| Path | Role |
+|---|---|
+| `modules/` | One module per component, taking names and tags |
+| `envs/{dev,staging,prod}/` | Environment roots; names in `locals.tf`, per-environment defaults in `variables.tf` |
+| `bootstrap/bootstrap-state.sh` | Remote state storage, plus your blob role on it |
+| `bootstrap/github-oidc/` | One deploy identity per GitHub Environment, with federated credentials and constrained roles |
 
-- `modules/` — resource modules (dumb: take `name` + `tags`)
-- `envs/{dev,staging,prod}/` — root modules; naming via `locals.tf`
-- `bootstrap/` — one-shot remote state script
-
-## Naming
-
-Short convention — workload `csa`, region short `uks`. See [docs/INFRASTRUCTURE.md](../docs/INFRASTRUCTURE.md).
-
-## Prerequisites
-
-```bash
-az login
-az account set --subscription <subscription-id>
-SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
-# Set a subscription budget alert in the portal before apply
-```
-
-Subscription IDs belong in local `terraform.tfvars` / env vars only — not in committed code.
-
-## Apply (dev)
-
-```bash
-cd terraform/envs/dev
-cp terraform.tfvars.example terraform.tfvars   # then set subscription_id
-terraform init -backend-config=backend.hcl
-terraform plan
-terraform apply
-```
-
-Staging/prod use the same modules with different `terraform.tfvars` / backend containers — do not apply until needed.
-
-## Remote state backend
-
-Created by `bootstrap/bootstrap-state.sh`:
-
-- RG: `rg-csa-tfstate-uks`
-- SA: `stcsatfstateuks`
-- Containers: `tfstate-dev|staging|prod`
+Providers: `azurerm` and `azapi` (Terraform 1.11 or later). State uses Entra auth (`use_azuread_auth`). The deploy workflow applies the environment roots; locally, use `make init` and `make plan`. Real `terraform.tfvars` files stay untracked. See [Operations](../docs/OPERATIONS.md#first-time-setup).

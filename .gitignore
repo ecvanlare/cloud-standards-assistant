@@ -50,7 +50,6 @@ AGENTS.md
 # Eval / trace artifacts (regenerable, keep out of git)
 eval/results/**
 !eval/results/.gitkeep
-!eval/results/latest-summary.md
 !eval/results/history.csv
 traces/
 *.log

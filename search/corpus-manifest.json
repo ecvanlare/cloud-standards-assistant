@@ -1,5 +1,5 @@
 {
-  "description": "Public corpus sources. Fetch with search/scripts/fetch-corpus.sh. All four sources are open URLs (WAF, Azure Security Benchmark, NIST, Terraform).",
+  "description": "Public corpus sources. Fetch with search/scripts/publish.sh fetch. All four sources are open URLs (WAF, Azure Security Benchmark, NIST, Terraform).",
   "documents": [
     {
       "id": "waf-reliability-zones",

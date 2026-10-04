@@ -1,23 +1,11 @@
 # Safety
 
-Content Safety (Foundry RAI filters), instruction-level XPIA / citation / PII guards, and red-team notes for the Cloud Standards Assistant (AZP-1).
+Responsible AI controls for the Standards Assistant.
 
-| Doc / script | Purpose |
-|--------------|---------|
-| [`content-safety.md`](content-safety.md) | RAI policy `csa-blocking-medium`, apply steps, blocked-prompt proof |
-| [`scripts/apply-rai-policy.sh`](scripts/apply-rai-policy.sh) | Upsert policy + attach to the agent (`gpt-5.4-mini`) and judge (`gpt-5-mini`) deployments |
-| [`RED-TEAM.md`](RED-TEAM.md) | Injection / citation / leak / PII / filter outcomes |
-| [`../agents/instructions.md`](../agents/instructions.md) | Cite-or-defer, XPIA, PII, tool-path routing |
-| [`../docs/COST-PER-INTERACTION.md`](../docs/COST-PER-INTERACTION.md) | Cost before/after tool-path tiering |
+| Control | Where |
+|---|---|
+| RAI policy `csa-blocking-medium`: Hate, Sexual, Violence, Self-harm blocked at Medium on prompt and completion; Jailbreak on prompt; Protected Material on completion | `terraform/modules/foundry` (`azapi_resource.rai_policy`), attached to the agent and judge deployments |
+| Agent `rai_config` set to the policy's resource ID (Agent Service rejects the short name) | `agents/scripts/deploy_agent.py` |
+| Cite-or-defer, cross-prompt injection and PII instructions | `agents/instructions.md` |
 
-## Re-apply after account recreate
-
-```bash
-./safety/scripts/apply-rai-policy.sh
-./agents/scripts/deploy-agent.sh   # wires rai_config ARM ID + current instructions
-```
-
-## Scope
-
-- Uses account **RAI / content filters**, not a separate Azure AI Content Safety resource.
-- Cost “tiering” is Function vs Search routing (see cost doc); the separate agent model is for tool support, not tiering.
+Filters run on the Foundry account; there's no separate Content Safety resource. Red-team results are in [Evidence](../docs/EVIDENCE.md#red-team). Changes to the policy go through a pull request and a Terraform plan.

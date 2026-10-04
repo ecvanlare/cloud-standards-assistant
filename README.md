@@ -1,146 +1,91 @@
 # Cloud & DevOps Standards Assistant
 
-Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, multi-tool agent, Container Apps UI/BFF, OpenTelemetry / Foundry traces, RAI guardrails, and cloud + CI evaluation.
+Cited answers to cloud-standards questions (Azure Well-Architected Framework, Azure Security Benchmark, NIST, Terraform) from an agent on Microsoft Foundry. Terraform builds the infrastructure and GitHub Actions deliver it, with no stored credentials.
 
 ![Demo — multi-tool answer with citations and trace](docs/screenshots/demo.gif)
 
-*One question, three tools: Search for ASB Key Vault guidance, live ASB version, latest `azurerm` provider — with citations and a `trace_id`.*
+*One question, three tools: Azure AI Search for ASB Key Vault guidance, the live ASB version, and the latest `azurerm` provider, with citations and a `trace_id`.*
 
-| Capability | What this repo demonstrates |
-|---|---|
-| RAG / vector store | Azure AI Search index (`corpus-tuned`); hybrid keyword + vector (`vectorQueries`); embeddings `text-embedding-3-small` |
-| Ingestion | Blob corpus → indexer → skillsets (chunk + embed) → citation fields (`framework` / `section` / `title`) |
-| Agent + tools | Foundry Agent Service (agent `gpt-5.4-mini`, eval judge `gpt-5-mini`); Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
-| Application | Chat UI + BFF on Azure Container Apps; HTTP scale (incl. toward zero); Key Vault + user-assigned MI; Entra to Foundry |
-| Observability | BFF OpenTelemetry → Application Insights; Foundry Control Plane traces (latency, tokens, estimated cost) |
-| Safety | Foundry RAI / content filters (`csa-blocking-medium`); jailbreak / XPIA / PII instruction guards; red-team notes |
-| Evaluation | Golden set (≥50); coherence / relevance / response completeness / safety; CI schema gate; Foundry cloud Evaluations |
-| Cost / ops | Tool-path routing (Function vs Search); Terraform `dev`/`staging`/`prod`; `dev-up` / `dev-down` |
+## The problem
 
-Answers standards questions from a public corpus (WAF, ASB / MCSB, NIST, Terraform docs); defers outside knowledge (e.g. live pricing).
+Platform teams answer the same standards questions every week, and the answers have to be current and traceable to a source. A general chat model answers from memory: it cannot cite the control, and it does not know this month's benchmark or provider version.
 
-## Architecture
+## What it does
 
-```mermaid
-flowchart LR
-  User --> ACA[Container_App_UI_BFF]
-  ACA --> Agent[Foundry_Agent_Service]
-  Agent -->|retrieve| Search[Azure_AI_Search]
-  Agent -->|ASB_version| FuncASB[Azure_Function]
-  Agent -->|TF_versions| FuncReg[Registry_Function]
-  Search --> Corpus[(WAF_ASB_NIST_TF)]
-  Agent --> RAI[RAI_content_filters]
-  ACA -->|OTel| AI[App_Insights]
-  Agent -->|Control_Plane| AI
-  Agent --> Answer[Answer_plus_citation]
-```
+- **Cites its sources.** Guidance comes from a public corpus indexed in Azure AI Search, and every answer names the framework, section and title.
+- **Checks live facts.** The current ASB version and Terraform provider versions come from two Azure Functions, not the model.
+- **Says when it doesn't know.** Pricing, live inventory and questions without evidence are deferred, not guessed.
+- **Is traceable.** Every answer returns a `trace_id` that joins the UI request to the agent's tool calls in Application Insights.
 
-Detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+## Results
 
-## Repository structure
-
-```
-cloud-standards-assistant/
-├── terraform/     # modules + envs
-├── search/        # index, skillsets, corpus scripts
-├── agents/        # agent definition + deploy/demo
-├── tools/         # Functions + OpenAPI contracts
-├── safety/        # RAI policy + red-team notes
-├── eval/          # golden_set.jsonl + runners
-├── serving/       # Container Apps UI + BFF
-├── scripts/       # dev-up / dev-down
-└── docs/          # architecture, deploy, cost, observability
-```
-
-## Prerequisites
-
-- Azure subscription with Microsoft Foundry access
-- `az` CLI (logged in), Terraform >= 1.7
-- Budget alert on the subscription
-- `terraform/envs/dev/terraform.tfvars` from the example (subscription id — not committed)
-
-## Quick start
-
-One-time remote state:
-
-```bash
-az account set --subscription <subscription-id>
-SUBSCRIPTION_ID=<subscription-id> ./terraform/bootstrap/bootstrap-state.sh
-cd terraform/envs/dev
-cp terraform.tfvars.example terraform.tfvars   # set subscription_id
-terraform init -backend-config=backend.hcl
-```
-
-Bring the stack up (infra + Functions + Search + agent + serving):
-
-```bash
-./scripts/dev-up.sh
-# UI: terraform -chdir=terraform/envs/dev output -raw serving_url
-```
-
-Tear down:
-
-```bash
-CONFIRM_DESTROY=1 ./scripts/dev-down.sh
-```
-
-Details: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Cost notes: [`docs/INFRASTRUCTURE.md`](docs/INFRASTRUCTURE.md).
-
-## Agent flow
-
-1. Retrieve — hybrid Search (`corpus-tuned`) for guidance; cite `framework` / `section` / `title`.
-2. ASB version — Function `get_asb_version` (live, not corpus).
-3. Terraform Registry — Function proxies `registry.terraform.io`.
-4. Multi-tool — comparisons may call several tools in one turn.
-5. Defer — pricing, live inventory, or no evidence: outside knowledge.
-
-[`agents/`](agents/), [`tools/`](tools/).
-
-![Chat UI — live Registry tool + trace id](docs/screenshots/ui-ask-live-tool.png)
-
-## Observability
-
-UI returns `trace_id` (and tool path) on `/api/ask`. Foundry Control Plane traces show latency, tokens, and estimated cost. Join BFF + agent: [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md).
-
-![Foundry Traces — tokens and estimated cost](docs/screenshots/foundry-traces.png)
-
-## Evaluation
-
-Golden set + CI: [`eval/golden_set.jsonl`](eval/golden_set.jsonl), [`.github/workflows/eval.yml`](.github/workflows/eval.yml). Cloud runs: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md).
-
-Foundry cloud evaluation on the 62-question golden set (out-of-scope rows excluded), same `gpt-5-mini` judge for every run. Pass rates; full history in [`eval/results/history.csv`](eval/results/history.csv).
+Foundry cloud evaluation on the 62-question golden set, with the same `gpt-5-mini` judge for every run. Full history: [`eval/results/history.csv`](eval/results/history.csv).
 
 | Agent version | Change | Coherence | Relevance | Response completeness |
 |---|---|---|---|---|
 | v15 | Baseline: `gpt-5-mini`, 50K TPM | 67.7% | 48.4% | 46.8% |
 | v17 | Agent model `gpt-5.4-mini` (Foundry tool support for Search + OpenAPI) | 100.0% | 96.8% | 93.5% |
 
-From v15 to v17, relevance rose from 48.4% to 96.8% and response completeness from 46.8% to 93.5%.
-
-![Foundry Evaluations list](docs/screenshots/foundry-evaluations-list.png)
-
-![Cloud eval run summary](docs/screenshots/foundry-evaluation-run.png)
+From v15 to v17, relevance rose from 48.4% to 96.8% and response completeness from 46.8% to 93.5%. Every deploy re-runs an 8-question evaluation and blocks promotion if scores drop ([`eval/thresholds.json`](eval/thresholds.json)).
 
 ## Cost
 
-| Path | Relative cost |
-|------|----------------|
-| Function / Registry only | Lower |
-| Search + synthesis | Higher |
+- **Idle:** AI Search Basic is the main fixed cost (roughly $75 a month). Models are pay-per-token, and the web app scales to zero.
+- **Per question:** version lookups go straight to a Function. Only guidance questions pay for retrieval and the longer synthesis.
+- **Off switch:** one workflow destroys an environment and purges the soft-deleted Foundry account.
 
-Detail: [`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md). AI Search Basic is the main fixed cost — tear down with `dev-down` when unused.
+## Security and responsible AI
 
-## Safety
+- **No secrets in CI.** GitHub OIDC signs in to one managed identity per environment. Each identity may grant only the roles the stack needs, enforced by a role-assignment condition.
+- **No keys at runtime.** The app, agent, Search indexer and Functions use managed identities and Entra ID. The one app secret lives in Key Vault.
+- **Content filters as code.** The RAI policy `csa-blocking-medium` (Medium blocking on harm categories, plus Jailbreak and Protected Material) is in Terraform and attached to both model deployments and the agent.
+- **Red-teamed.** All five attempts (citation bypass, prompt leak, cross-prompt injection, PII bait, violent content) were handled. See [`docs/EVIDENCE.md`](docs/EVIDENCE.md#red-team).
 
-RAI policy on the agent and chat (judge) deployments + instruction guards. Red-team table: [`safety/RED-TEAM.md`](safety/RED-TEAM.md). Policy notes: [`safety/content-safety.md`](safety/content-safety.md).
+## How it's delivered
 
-## Design decisions
+```mermaid
+flowchart LR
+  pr[Pull request] --> ci["CI: lint, validate, image build, dev plan"]
+  ci --> merge[Merge to main]
+  merge --> dev["dev: infra, image, Functions, corpus, agent, smoke"]
+  dev --> gate{"Eval gate"}
+  gate -->|approval| staging["staging: same image"]
+  staging -->|approval| prod["prod: same image"]
+```
 
-- **Registry via Function** — Foundry OpenAPI did not reliably call `registry.terraform.io` directly.
-- **Session map** — BFF `session_id` → Foundry `conversation_id` in-process; not shared across replicas ([`serving/ISOLATION.md`](serving/ISOLATION.md)).
-- **Trace join** — BFF and Foundry may not share one W3C parent; use `trace_id` + conversation id.
-- **RAI ARM id** — agent `rai_config` needs the content-filter policy resource id (name alone is rejected).
+The image is built once per commit and imported into staging and prod unchanged. Staging and prod wait for a reviewer.
+
+## Run it
+
+1. **Bootstrap once:** create remote state (`terraform/bootstrap/bootstrap-state.sh`), then apply `terraform/bootstrap/github-oidc` to create the deploy identities.
+2. **Connect GitHub:** `scripts/setup-github.sh` sets up the environments, approvals, secrets and branch protection.
+3. **Deploy:** merge to `main` for dev, or `make deploy ENV=dev`. Promote with the **Deploy** workflow (`target: staging` or `prod`).
+
+Then `make demo`, `make eval` or `make smoke`. Run `make help` for the full list.
+
+## Docs
+
+| Doc | What's in it |
+|---|---|
+| [Architecture](docs/ARCHITECTURE.md) | Components, data flow, identities, environments |
+| [Decisions](docs/DECISIONS.md) | Each design choice, its source, and the trade-offs |
+| [Operations](docs/OPERATIONS.md) | Deploy, promote, evaluate, monitor, tear down |
+| [Evidence](docs/EVIDENCE.md) | Eval runs, red team, load test, traces, cost |
+
+## Repository
+
+```
+terraform/   modules, dev/staging/prod roots, state and OIDC bootstrap
+search/      index, skillsets, indexers, corpus manifest, publish script
+agents/      agent definition, instructions, deploy and demo
+tools/       Azure Functions and their OpenAPI contracts
+eval/        golden set, Foundry eval runner, thresholds, history
+serving/     chat UI and backend on Container Apps
+safety/      responsible AI notes
+scripts/     tf-env.sh, setup-github.sh
+.github/     CI, deploy, eval and teardown workflows
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

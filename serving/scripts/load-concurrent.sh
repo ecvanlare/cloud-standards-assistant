@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Concurrent /health load against the serving Container App; print replica counts.
-# Capture portal Metrics or this script's output as evidence (see serving/EVIDENCE.md).
+# Capture portal Metrics or this script's output as evidence (see docs/EVIDENCE.md).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -80,4 +80,4 @@ az containerapp show \
   --query "properties.template.scale" \
   -o json
 
-echo "Capture Azure Portal → Container App → Metrics (Replica Count / Requests) for serving/EVIDENCE.md"
+echo "Capture Azure Portal → Container App → Metrics (Replica Count / Requests) for docs/EVIDENCE.md"
