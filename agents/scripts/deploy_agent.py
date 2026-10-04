@@ -47,19 +47,17 @@ def main() -> int:
         default=os.environ.get("REGISTRY_FUNCTION_BASE_URL", ""),
     )
     parser.add_argument(
-        "--rai-policy-name",
-        default=os.environ.get("RAI_POLICY_NAME", "csa-blocking-medium"),
-        help="RAI policy short name or full ARM resource ID (empty to omit)",
-    )
-    parser.add_argument(
         "--rai-policy-id",
         default=os.environ.get("RAI_POLICY_ID", ""),
-        help="Full ARM ID of the RAI policy (preferred for agent create)",
+        help="Full ARM ID of the RAI policy (Terraform output rai_policy_id)",
     )
     args = parser.parse_args()
 
     if not args.project_endpoint:
         print("FOUNDRY_PROJECT_ENDPOINT / --project-endpoint is required", file=sys.stderr)
+        return 1
+    if not args.rai_policy_id:
+        print("RAI_POLICY_ID / --rai-policy-id is required", file=sys.stderr)
         return 1
     if not args.function_base_url:
         print("FUNCTION_BASE_URL / --function-base-url is required for ASB Function OpenAPI", file=sys.stderr)
@@ -148,20 +146,17 @@ def main() -> int:
         )
         print(f"Attached OpenAPI tool: {cfg.get('name') or key}")
 
-    definition_kwargs: dict = {
-        "model": model,
-        "instructions": instructions,
-        "tools": tools,
-    }
-    rai_ref = (args.rai_policy_id or args.rai_policy_name or "").strip()
-    rai_short = args.rai_policy_name.strip() if args.rai_policy_name else None
-    if rai_ref:
-        definition_kwargs["rai_config"] = RaiConfig(rai_policy_name=rai_ref)
-        print(f"RAI policy: {rai_short or rai_ref}")
+    rai_policy_name = args.rai_policy_id.rstrip("/").rsplit("/", 1)[-1]
+    print(f"RAI policy: {rai_policy_name}")
 
     agent = client.agents.create_version(
         agent_name=agent_name,
-        definition=PromptAgentDefinition(**definition_kwargs),
+        definition=PromptAgentDefinition(
+            model=model,
+            instructions=instructions,
+            tools=tools,
+            rai_config=RaiConfig(rai_policy_name=args.rai_policy_id),
+        ),
         description=definition.get("description") or display_name,
         metadata={"display_name": display_name},
     )
@@ -177,7 +172,7 @@ def main() -> int:
         "function_base_url": args.function_base_url.rstrip("/"),
         "registry_function_base_url": args.registry_function_base_url.rstrip("/"),
         "tool_count": len(tools),
-        "rai_policy_name": rai_short or (None if not rai_ref else "custom"),
+        "rai_policy_name": rai_policy_name,
     }
     (AGENTS_DIR / ".last-deploy.json").write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(out, indent=2))
