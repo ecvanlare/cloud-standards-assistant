@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
 # Shared helpers for Foundry cloud-eval scripts.
 set -euo pipefail
 

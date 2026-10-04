@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
 # Shared helpers for search scripts. Expects TF_ENV_DIR (default: terraform/envs/dev).
 set -euo pipefail
 
