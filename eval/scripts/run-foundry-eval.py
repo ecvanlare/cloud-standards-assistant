@@ -254,6 +254,12 @@ def main() -> int:
         action="store_true",
         help="Require --dataset-id; do not upload --dataset-file",
     )
+    parser.add_argument(
+        "--gate",
+        type=Path,
+        default=None,
+        help="JSON of minimum pass rates per evaluator; exit 2 if any is missed",
+    )
     args = parser.parse_args()
 
     if not args.project_endpoint:
@@ -451,6 +457,25 @@ def write_summary(
         return 1
     if status == "failed" and not report_url:
         return 1
+    if args.gate:
+        return check_gate(status, rates, args.gate)
+    return 0
+
+
+def check_gate(status: str | None, rates: dict[str, float | None], thresholds_path: Path) -> int:
+    if status not in ("completed", "succeeded"):
+        print(f"Gate failed: run status {status}", file=sys.stderr)
+        return 2
+    thresholds = json.loads(thresholds_path.read_text(encoding="utf-8"))
+    failures = []
+    for name, minimum in thresholds.items():
+        rate = rates.get(name)
+        if rate is None or rate < minimum:
+            failures.append(f"{name}={'n/a' if rate is None else f'{rate:.1f}%'} (min {minimum}%)")
+    if failures:
+        print("Gate failed: " + ", ".join(failures), file=sys.stderr)
+        return 2
+    print(f"Gate passed ({thresholds_path.name})")
     return 0
 
 
