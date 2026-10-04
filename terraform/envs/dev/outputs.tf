@@ -58,6 +58,10 @@ output "chat_deployment_name" {
   value = module.foundry.chat_deployment_name
 }
 
+output "agent_deployment_name" {
+  value = module.foundry.agent_deployment_name
+}
+
 output "embedding_deployment_name" {
   value = module.foundry.embedding_deployment_name
 }

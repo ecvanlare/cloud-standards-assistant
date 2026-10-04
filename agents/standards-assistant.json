@@ -1,7 +1,7 @@
 {
   "name": "Cloud & DevOps Standards Assistant",
   "agent_name": "cloud-devops-standards-assistant",
-  "model": "gpt-5-mini",
+  "model": "gpt-5.4-mini",
   "instructions_file": "instructions.md",
   "description": "Answers cloud and DevOps standards questions with Search citations, ASB version Function, and Terraform Registry lookups.",
   "grounding": {

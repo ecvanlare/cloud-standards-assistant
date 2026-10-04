@@ -28,6 +28,8 @@ if RG="$(terraform output -raw resource_group_name 2>/dev/null)"; then
 else
   RG="rg-csa-${ENV}-uks"
 fi
+FOUNDRY_ACCOUNT="$(terraform output -raw foundry_account_name 2>/dev/null || echo "ais-csa-${ENV}")"
+LOCATION="$(terraform output -raw location 2>/dev/null || echo "uksouth")"
 
 echo "Resource group: ${RG}"
 
@@ -49,4 +51,15 @@ else
 fi
 
 popd >/dev/null
+
+# Deleted AI Services accounts stay soft-deleted for 48h and come back with their
+# agents on the next create under the same name. Purge for a clean slate.
+if [[ -n "$(az cognitiveservices account list-deleted --query "[?name=='${FOUNDRY_ACCOUNT}'].name" -o tsv)" ]]; then
+  echo "Purging soft-deleted Foundry account ${FOUNDRY_ACCOUNT}"
+  az cognitiveservices account purge \
+    --location "${LOCATION}" \
+    --resource-group "${RG}" \
+    --name "${FOUNDRY_ACCOUNT}"
+fi
+
 echo "Done. Recreate with: ./scripts/dev-up.sh"

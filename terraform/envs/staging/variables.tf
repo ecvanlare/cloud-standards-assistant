@@ -28,7 +28,13 @@ variable "key_vault_purge_protection_enabled" {
 variable "chat_capacity" {
   type        = number
   description = "Chat model deployment capacity (TPM in thousands)."
-  default     = 10
+  default     = 50
+}
+
+variable "agent_capacity" {
+  type        = number
+  description = "Agent model deployment capacity (TPM in thousands)."
+  default     = 50
 }
 
 variable "embedding_capacity" {

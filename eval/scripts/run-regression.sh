@@ -24,8 +24,9 @@ LIMIT="${EVAL_LIMIT:-10}"
 if [[ "${LIVE}" == "1" ]]; then
   : "${FOUNDRY_PROJECT_ENDPOINT:?}"
   : "${FOUNDRY_ENDPOINT:?}"
-  python3 -m pip install --quiet --disable-pip-version-check \
-    "azure-identity" "azure-ai-projects>=2.0.0" "azure-ai-evaluation" "openai" >/dev/null
+  # shellcheck source=/dev/null
+  source "${ROOT}/scripts/_python.sh"
+  use_repo_python
   python3 eval/scripts/run_eval.py --limit "${LIMIT}"
   echo "Repo live eval complete. See eval/results/latest-summary.json"
 fi

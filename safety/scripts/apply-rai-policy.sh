@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Upsert custom RAI content-filter policy on the Foundry AI Services account
-# and attach it to the chat deployment (prompt + completion Blocking @ Medium).
+# and attach it to the chat (judge) and agent deployments (prompt + completion Blocking @ Medium).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -21,12 +21,12 @@ require_cmd jq
 pushd "${TF_ENV_DIR}" >/dev/null
 ACCOUNT="$(terraform output -raw foundry_account_name)"
 RG="$(terraform output -raw resource_group_name)"
-DEPLOYMENT="$(terraform output -raw chat_deployment_name)"
+DEPLOYMENTS=("$(terraform output -raw chat_deployment_name)" "$(terraform output -raw agent_deployment_name)")
 popd >/dev/null
 
 SUB="$(az account show --query id -o tsv)"
-POLICY_URL="https://management.azure.com/subscriptions/${SUB}/resourceGroups/${RG}/providers/Microsoft.CognitiveServices/accounts/${ACCOUNT}/raiPolicies/${POLICY_NAME}?api-version=2025-06-01"
-DEPLOY_URL="https://management.azure.com/subscriptions/${SUB}/resourceGroups/${RG}/providers/Microsoft.CognitiveServices/accounts/${ACCOUNT}/deployments/${DEPLOYMENT}?api-version=2025-06-01"
+ACCOUNT_URL="https://management.azure.com/subscriptions/${SUB}/resourceGroups/${RG}/providers/Microsoft.CognitiveServices/accounts/${ACCOUNT}"
+POLICY_URL="${ACCOUNT_URL}/raiPolicies/${POLICY_NAME}?api-version=2025-06-01"
 
 # User-managed Blocking policy: Medium harm filters on Prompt + Completion,
 # plus Jailbreak (prompt) and Protected Material Text (completion).
@@ -54,17 +54,20 @@ echo "Upserting RAI policy ${POLICY_NAME} on ${ACCOUNT}"
 az rest --method put --url "${POLICY_URL}" --body "${body}" --headers "Content-Type=application/json" -o json \
   | jq '{name: .name, mode: .properties.mode, filterCount: (.properties.contentFilters|length)}'
 
-echo "Fetching deployment ${DEPLOYMENT} to set raiPolicyName"
-deploy_get="$(az rest --method get --url "${DEPLOY_URL}" -o json)"
-deploy_put="$(echo "${deploy_get}" | jq --arg pol "${POLICY_NAME}" '
-  {
-    sku: .sku,
-    properties: (.properties | {model, versionUpgradeOption, raiPolicyName: $pol})
-  }
-')"
+for deployment in "${DEPLOYMENTS[@]}"; do
+  deploy_url="${ACCOUNT_URL}/deployments/${deployment}?api-version=2025-06-01"
+  echo "Fetching deployment ${deployment} to set raiPolicyName"
+  deploy_get="$(az rest --method get --url "${deploy_url}" -o json)"
+  deploy_put="$(echo "${deploy_get}" | jq --arg pol "${POLICY_NAME}" '
+    {
+      sku: .sku,
+      properties: (.properties | {model, versionUpgradeOption, raiPolicyName: $pol})
+    }
+  ')"
 
-echo "Attaching policy ${POLICY_NAME} to deployment ${DEPLOYMENT}"
-az rest --method put --url "${DEPLOY_URL}" --body "${deploy_put}" --headers "Content-Type=application/json" -o json \
-  | jq '{name: .name, raiPolicyName: .properties.raiPolicyName, model: .properties.model.name}'
+  echo "Attaching policy ${POLICY_NAME} to deployment ${deployment}"
+  az rest --method put --url "${deploy_url}" --body "${deploy_put}" --headers "Content-Type=application/json" -o json \
+    | jq '{name: .name, raiPolicyName: .properties.raiPolicyName, model: .properties.model.name}'
+done
 
 echo "Done. Export RAI_POLICY_NAME=${POLICY_NAME} for agent deploy."

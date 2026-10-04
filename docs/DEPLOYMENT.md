@@ -42,7 +42,9 @@ cd terraform/envs/dev && terraform apply
 # Or open terraform output -raw serving_url in a browser
 ```
 
-`dev-up.sh` runs Terraform, Functions, Search, agent, and serving. Flags: `SKIP_SEARCH=1`, `SKIP_AGENT=1`, `SKIP_SERVING=1`, `SKIP_RAI=0`.
+`dev-up.sh` runs Terraform, Functions, Search, the RAI policy, agent, and serving. Flags: `SKIP_SEARCH=1`, `SKIP_AGENT=1`, `SKIP_SERVING=1`, `SKIP_RAI=1`.
+
+Python scripts run from a repo-local `.venv` (created on first use from `scripts/requirements.txt`, pinned). Needs Python 3.10+ on `PATH` (or `PYTHON_BASE`); no global or `--user` pip installs.
 
 **Enterprise:** the same order as jobs in one workflow (or separate workflows with `needs:`), with GitHub Environments (`dev` → `staging` → `prod`) and approval before prod.
 

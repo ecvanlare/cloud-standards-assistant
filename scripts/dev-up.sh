@@ -14,7 +14,7 @@ TF_ENV_DIR="${TF_ENV_DIR:-${ROOT}/terraform/envs/${ENV}}"
 SKIP_SEARCH="${SKIP_SEARCH:-0}"
 SKIP_AGENT="${SKIP_AGENT:-0}"
 SKIP_SERVING="${SKIP_SERVING:-0}"
-SKIP_RAI="${SKIP_RAI:-1}"
+SKIP_RAI="${SKIP_RAI:-0}"
 SKIP_SMOKE="${SKIP_SMOKE:-0}"
 
 command -v az >/dev/null
@@ -46,14 +46,17 @@ if [[ "${SKIP_SEARCH}" != "1" ]]; then
   "${ROOT}/search/scripts/run-indexers.sh" || true
 fi
 
+# The agent version references this policy by ARM id, so it must exist first.
+if [[ "${SKIP_RAI}" != "1" ]]; then
+  echo "==> RAI policy"
+  "${ROOT}/safety/scripts/apply-rai-policy.sh"
+fi
+
 if [[ "${SKIP_AGENT}" != "1" ]]; then
   echo "==> Foundry agent"
   "${ROOT}/agents/scripts/deploy-agent.sh"
-fi
-
-if [[ "${SKIP_RAI}" != "1" ]]; then
-  echo "==> RAI policy"
-  "${ROOT}/safety/scripts/apply-rai-policy.sh" || true
+  echo "==> Foundry storage connection (Datasets / Evaluations)"
+  "${ROOT}/eval/scripts/ensure-storage-connection.sh"
 fi
 
 if [[ "${SKIP_SMOKE}" != "1" && "${SKIP_AGENT}" != "1" ]]; then

@@ -3,5 +3,6 @@ location                           = "uksouth"
 subscription_id                    = "<subscription-id>"
 search_sku                         = "standard"
 key_vault_purge_protection_enabled = true
-chat_capacity                      = 20
+chat_capacity                      = 50
+agent_capacity                     = 50
 embedding_capacity                 = 20
