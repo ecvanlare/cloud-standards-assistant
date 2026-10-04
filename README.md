@@ -2,6 +2,10 @@
 
 Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, multi-tool agent, Container Apps UI/BFF, OpenTelemetry / Foundry traces, RAI guardrails, and cloud + CI evaluation.
 
+![Demo — multi-tool answer with citations and trace](docs/screenshots/demo.gif)
+
+*One question, three tools: Search for ASB Key Vault guidance, live ASB version, latest `azurerm` provider — with citations and a `trace_id`.*
+
 | Capability | What this repo demonstrates |
 |---|---|
 | RAG / vector store | Azure AI Search index (`corpus-tuned`); hybrid keyword + vector (`vectorQueries`); embeddings `text-embedding-3-small` |
@@ -102,7 +106,16 @@ UI returns `trace_id` (and tool path) on `/api/ask`. Foundry Control Plane trace
 
 ## Evaluation
 
-Golden set + CI: [`eval/golden_set.jsonl`](eval/golden_set.jsonl), [`.github/workflows/eval.yml`](.github/workflows/eval.yml). Cloud runs: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md). Smoke baseline (agent **v9**, `smoke-20260910T070613Z`): **60%** coherence / relevance.
+Golden set + CI: [`eval/golden_set.jsonl`](eval/golden_set.jsonl), [`.github/workflows/eval.yml`](.github/workflows/eval.yml). Cloud runs: [`docs/FOUNDRY-EVAL.md`](docs/FOUNDRY-EVAL.md).
+
+Foundry cloud evaluation on the 62-question golden set (out-of-scope rows excluded), same `gpt-5-mini` judge for every run. Pass rates; full history in [`eval/results/history.csv`](eval/results/history.csv).
+
+| Agent version | Change | Coherence | Relevance | Response completeness |
+|---|---|---|---|---|
+| v15 | Baseline: `gpt-5-mini`, 50K TPM | 67.7% | 48.4% | 46.8% |
+| v17 | Agent model `gpt-5.4-mini` (Foundry tool support for Search + OpenAPI) | 100.0% | 96.8% | 93.5% |
+
+From v15 to v17, relevance rose from 48.4% to 96.8% and response completeness from 46.8% to 93.5%.
 
 ![Foundry Evaluations list](docs/screenshots/foundry-evaluations-list.png)
 
