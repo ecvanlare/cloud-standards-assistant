@@ -1,0 +1,72 @@
+name: Teardown
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [dev, staging, prod]
+      confirm:
+        description: Type the environment name to confirm
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  destroy:
+    if: inputs.confirm == inputs.environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: azure-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_operator_object_ids: ${{ secrets.OPERATOR_OBJECT_IDS }}
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_DIR: terraform/envs/${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+          terraform_wrapper: false
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Mask operator IDs
+        run: jq -r '.[] | "::add-mask::\(.)"' <<<"$TF_VAR_operator_object_ids"
+      - run: terraform -chdir="$TF_DIR" init -backend-config=backend.hcl
+      - name: Read names before destroy
+        id: names
+        run: |
+          {
+            echo "account=$(terraform -chdir="$TF_DIR" output -raw foundry_account_name)"
+            echo "group=$(terraform -chdir="$TF_DIR" output -raw resource_group_name)"
+            echo "location=$(terraform -chdir="$TF_DIR" output -raw location)"
+          } >> "$GITHUB_OUTPUT"
+      - name: Destroy
+        run: terraform -chdir="$TF_DIR" destroy -auto-approve
+      # A deleted Foundry account stays soft-deleted for 48 hours and returns with its agents
+      # if the same name is recreated, so purge it for a clean redeploy.
+      - name: Purge soft-deleted Foundry account
+        env:
+          ACCOUNT: ${{ steps.names.outputs.account }}
+          GROUP: ${{ steps.names.outputs.group }}
+          LOCATION: ${{ steps.names.outputs.location }}
+        run: |
+          if [[ -n "$(az cognitiveservices account list-deleted --query "[?name=='${ACCOUNT}'].name" -o tsv)" ]]; then
+            az cognitiveservices account purge --location "$LOCATION" --resource-group "$GROUP" --name "$ACCOUNT"
+          fi

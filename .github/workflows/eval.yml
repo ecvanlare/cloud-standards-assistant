@@ -1,45 +1,51 @@
-name: Eval regression
+name: Eval
 
 on:
-  pull_request:
-    paths:
-      - "eval/**"
-      - "agents/**"
-      - ".github/workflows/eval.yml"
-  push:
-    branches: [main]
-    paths:
-      - "eval/**"
-      - "agents/**"
-      - ".github/workflows/eval.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  validate-golden-set:
+  full-run:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: ${{ inputs.environment }}
+    env:
+      ENV: ${{ inputs.environment }}
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+          terraform_wrapper: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Validate golden_set.jsonl
-        run: python3 eval/scripts/validate-golden-set.py --min-rows 50
-
-  # Live agent + Foundry evaluators require Azure OIDC secrets.
-  # Enable when AZURE_CLIENT_ID / TENANT_ID / SUBSCRIPTION_ID are configured.
-  # live-eval:
-  #   needs: validate-golden-set
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: azure/login@v2
-  #       with:
-  #         client-id: ${{ secrets.AZURE_CLIENT_ID }}
-  #         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-  #         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #     - name: Run smoke eval
-  #       env:
-  #         RUN_LIVE_EVAL: "1"
-  #         EVAL_LIMIT: "5"
-  #         FOUNDRY_PROJECT_ENDPOINT: ${{ secrets.FOUNDRY_PROJECT_ENDPOINT }}
-  #         FOUNDRY_ENDPOINT: ${{ secrets.FOUNDRY_ENDPOINT }}
-  #       run: ./eval/scripts/run-regression.sh
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+      - run: python -m venv .venv && .venv/bin/pip install --quiet -r scripts/requirements.txt
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: terraform -chdir="terraform/envs/$ENV" init -backend-config=backend.hcl
+      - name: Full golden set with agent evaluators
+        run: make eval-full ENV="$ENV"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-full-${{ inputs.environment }}-${{ github.run_id }}
+          path: eval/results/foundry-eval-*.json
+          if-no-files-found: ignore
