@@ -15,10 +15,7 @@ tf_env_lines() {
     def o(k): .[k].value;
     {
       ENVIRONMENT: $env,
-      RESOURCE_GROUP: o("resource_group_name"),
-      LOCATION: o("location"),
       FOUNDRY_ENDPOINT: o("foundry_endpoint"),
-      FOUNDRY_ACCOUNT_NAME: o("foundry_account_name"),
       FOUNDRY_PROJECT_ENDPOINT: o("foundry_project_endpoint"),
       CHAT_DEPLOYMENT: o("chat_deployment_name"),
       AGENT_DEPLOYMENT: o("agent_deployment_name"),
@@ -34,9 +31,6 @@ tf_env_lines() {
       FUNCTION_BASE_URL: o("function_base_url"),
       REGISTRY_FUNCTION_APP_NAME: o("registry_function_app_name"),
       REGISTRY_FUNCTION_BASE_URL: o("registry_function_base_url"),
-      ACR_NAME: o("acr_name"),
-      ACR_LOGIN_SERVER: o("acr_login_server"),
-      SERVING_APP_NAME: o("serving_container_app_name"),
       SERVING_URL: o("serving_url")
     }
     | to_entries[]

@@ -39,7 +39,7 @@ resource "azurerm_role_assignment" "search_service_contributor" {
 
 # Whoever applies, plus operators, so a local apply and a CI apply grant the same set.
 locals {
-  operator_ids = toset(distinct(concat([data.azurerm_client_config.current.object_id], var.operator_object_ids)))
+  operator_ids = toset(concat([data.azurerm_client_config.current.object_id], var.operator_object_ids))
 
   operator_roles = {
     search_index_data_contributor = { scope = var.search_service_id, role = "Search Index Data Contributor" }

@@ -82,10 +82,6 @@ output "storage_account_id" {
   value = module.storage.id
 }
 
-output "serving_image_tag" {
-  value = var.serving_image_tag
-}
-
 output "container_apps_environment_id" {
   value = module.container_apps_env.id
 }

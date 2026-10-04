@@ -9,8 +9,7 @@ The golden set and Foundry cloud evaluation for the Standards Assistant.
 | `results/history.csv` | Every scored run and whether the change was kept |
 | `scripts/validate-golden-set.py` | Schema check, run in CI |
 | `scripts/export-foundry-dataset.py` | Golden set to Foundry JSONL (drops out-of-scope rows) |
-| `scripts/run-foundry-eval.py` | Runs the cloud eval against the agent; `--gate` fails on thresholds |
-| `scripts/run_eval.py` | Local scoring path, kept for comparison |
+| `scripts/run-foundry-eval.py` | Uploads the dataset and runs the cloud eval against the agent; `--gate` fails on thresholds |
 
 Run with `make eval` (8 rows, gated) or `make eval-full`. See [Operations](../docs/OPERATIONS.md#evaluate).
 
