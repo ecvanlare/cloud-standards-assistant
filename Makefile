@@ -15,7 +15,7 @@ lint: ## shellcheck, ruff, actionlint, golden set schema
 
 validate: ## terraform fmt and validate for every root
 	terraform fmt -check -recursive terraform
-	for dir in terraform/envs/*; do \
+	for dir in terraform/envs/* terraform/bootstrap/github-oidc; do \
 	  terraform -chdir=$$dir init -backend=false -input=false >/dev/null && terraform -chdir=$$dir validate; \
 	done
 

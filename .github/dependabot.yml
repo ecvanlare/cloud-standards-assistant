@@ -22,7 +22,7 @@ updates:
       interval: weekly
 
   - package-ecosystem: terraform
-    directories: [/terraform/envs/dev, /terraform/envs/staging, /terraform/envs/prod]
+    directories: [/terraform/envs/dev, /terraform/envs/staging, /terraform/envs/prod, /terraform/bootstrap/github-oidc]
     schedule:
       interval: weekly
     groups:
