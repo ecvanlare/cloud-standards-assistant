@@ -91,6 +91,54 @@ variable "embedding_capacity" {
   default = 10
 }
 
+variable "rai_policy_name" {
+  type        = string
+  description = "Content-filter (RAI) policy attached to the chat and agent deployments."
+  default     = "csa-blocking-medium"
+}
+
+variable "search_service_id" {
+  type = string
+}
+
+variable "search_endpoint" {
+  type = string
+}
+
+variable "search_connection_name" {
+  type    = string
+  default = "csa-ai-search"
+}
+
+variable "storage_account_id" {
+  type = string
+}
+
+variable "storage_blob_endpoint" {
+  type = string
+}
+
+variable "storage_connection_name" {
+  type        = string
+  description = "Project connection used by Foundry Datasets and Evaluations."
+  default     = "csa-corpus-storage"
+}
+
+variable "application_insights_id" {
+  type = string
+}
+
+variable "application_insights_connection_string" {
+  type      = string
+  sensitive = true
+}
+
+variable "appinsights_connection_name" {
+  type        = string
+  description = "Project connection that sends agent traces to Application Insights."
+  default     = "csa-appinsights"
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
