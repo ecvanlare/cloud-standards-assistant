@@ -1,43 +1,12 @@
-# Agents (Foundry Agent Service)
+# Agents
 
-Definition and scripts for the **Cloud & DevOps Standards Assistant**.
+The Foundry Agent Service definition for the Standards Assistant.
 
-## Layout
+| File | Role |
+|---|---|
+| `standards-assistant.json` | Agent name, Search grounding (`corpus-tuned`, hybrid, top 5), OpenAPI tool references |
+| `instructions.md` | When to use Search, a Function, or defer; citation, injection and PII rules |
+| `scripts/deploy_agent.py` | Publishes a new agent version with the Search tool, both OpenAPI tools and the RAI policy |
+| `scripts/run_demo.py` | Asks one question and prints the tool steps (`make demo`) |
 
-| Path | Role |
-|------|------|
-| `standards-assistant.json` | Name, model (`gpt-5.4-mini`; `deploy-agent.sh` passes Terraform `agent_deployment_name`), Search + OpenAPI tool config |
-| `instructions.md` | When to Search vs Function vs Registry vs defer |
-| `scripts/ensure-search-connection.sh` | Foundry project connection → Azure AI Search (Entra ID) |
-| `scripts/ensure-appinsights-connection.sh` | Foundry project connection → Application Insights (agent Traces / Monitor) |
-| `scripts/deploy-agent.sh` | Upsert connections + create agent version |
-| `scripts/run-demo.sh` | Conversation + response demo |
-
-Tool OpenAPI specs and Function source live under [`tools/`](../tools/).
-
-Conversation state is Foundry **conversations** / **responses**. Deploy copies `instructions.md` into the agent version. Portal Playground uses the same agent.
-
-## Prerequisites
-
-- `dev` stack applied (`terraform/envs/dev`) with Search ingest and both Function Apps
-- `./tools/scripts/deploy-function.sh` so `/api/asb/version` is live
-- `./tools/scripts/deploy-registry-function.sh` so Registry proxy routes are live
-- Azure CLI logged in; Python packages installed by deploy scripts
-
-## Deploy (dev)
-
-```bash
-./tools/scripts/deploy-function.sh
-./tools/scripts/deploy-registry-function.sh
-./agents/scripts/deploy-agent.sh
-```
-
-## Demo
-
-```bash
-./agents/scripts/run-demo.sh "What is the current Azure Security Benchmark version?"
-./agents/scripts/run-demo.sh "What versions does hashicorp/azurerm have on the Terraform Registry?"
-./agents/scripts/run-demo.sh "What does WAF say about availability zones?"
-```
-
-Local scripts vs enterprise pipeline: [`docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md).
+Both scripts read their settings from `scripts/tf-env.sh`. The deploy workflow publishes a version on every deploy. See [Operations](../docs/OPERATIONS.md).

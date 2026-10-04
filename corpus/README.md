@@ -1,9 +1,3 @@
-# Local corpus downloads
+# Corpus
 
-Fetched/public docs land under `waf/`, `asb/`, `nist/`, and `terraform/`.
-
-Populate with:
-
-```bash
-./search/scripts/fetch-corpus.sh
-```
+Public pages listed in `search/corpus-manifest.json` are downloaded here (`waf/`, `asb/`, `nist/`, `terraform/`) and are not committed. Populate with `search/scripts/publish.sh fetch`.

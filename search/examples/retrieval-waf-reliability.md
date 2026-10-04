@@ -28,7 +28,14 @@ Architecture Strategies for Using Availability Zones and Regions - Microsoft Azu
 ## How to reproduce
 
 ```bash
-./search/scripts/query-example.sh "What does the Well-Architected Framework say about reliability zones?"
+source scripts/tf-env.sh dev
+jq -n --arg q "What does the Well-Architected Framework say about reliability zones?" \
+  '{search: $q, top: 3, select: "framework,section,title,source_path",
+    vectorQueries: [{kind: "text", text: $q, fields: "contentVector", k: 3}]}' \
+  | curl -sS -H "Authorization: Bearer $(az account get-access-token --resource https://search.azure.com --query accessToken -o tsv)" \
+      -H "Content-Type: application/json" -d @- \
+      "$SEARCH_ENDPOINT/indexes/corpus-tuned/docs/search?api-version=2024-07-01" \
+  | jq '.value'
 ```
 
-`corpus-default` returns the same primary citation with fewer total chunks (see [`../CHUNKING.md`](../CHUNKING.md)).
+`corpus-default` returns the same primary citation with fewer total chunks (see [Evidence](../../docs/EVIDENCE.md#chunking)).
