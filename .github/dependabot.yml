@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directories: [/scripts, /serving, /tools/functions/asb_version, /tools/functions/terraform_registry]
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /serving
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: terraform
+    directories: [/terraform/envs/dev, /terraform/envs/staging, /terraform/envs/prod, /terraform/bootstrap/github-oidc]
+    schedule:
+      interval: weekly
+    groups:
+      terraform:
+        patterns: ["*"]
