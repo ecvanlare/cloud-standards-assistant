@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-# session_id -> Foundry conversation_id (in-process only; see ISOLATION.md)
+# session_id -> Foundry conversation_id (in-process only, per replica)
 _sessions: dict[str, str] = {}
 _lock = threading.Lock()
 
@@ -211,7 +211,7 @@ def ask(body: AskRequest) -> AskResponse:
                         extra_body={"agent_reference": agent_ref},
                         max_output_tokens=MAX_OUTPUT_TOKENS,
                     )
-        except Exception as exc:  # noqa: BLE001 — surface Foundry errors to client
+        except Exception as exc:
             detail = str(exc)
             _set_span_attrs(csa_error=True, csa_error_preview=detail[:200])
             if "content_filter" in detail.lower() or "content management" in detail.lower():
