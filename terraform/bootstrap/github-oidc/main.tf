@@ -16,7 +16,7 @@ data "azurerm_role_definition" "assignable" {
 
 locals {
   github_issuer = "https://token.actions.githubusercontent.com"
-  role_guids    = join(", ", [for role in data.azurerm_role_definition.assignable : role.role_definition_id])
+  role_guids    = join(", ", [for role in data.azurerm_role_definition.assignable : basename(role.role_definition_id)])
 
   # Role Based Access Control Administrator may create or delete only the roles listed above.
   rbac_condition = <<-EOT
