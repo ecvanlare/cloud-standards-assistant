@@ -33,7 +33,15 @@ if ! az storage account show --name "$SA_NAME" --resource-group "$RG_NAME" &>/de
     --tags workload=csa managed_by=terraform project=cloud-standards-assistant purpose=tfstate
 fi
 
-for c in tfstate-dev tfstate-staging tfstate-prod; do
+# Backends use Entra auth (use_azuread_auth), so the operator needs a blob data role.
+az role assignment create \
+  --assignee-object-id "$(az ad signed-in-user show --query id -o tsv)" \
+  --assignee-principal-type User \
+  --role "Storage Blob Data Contributor" \
+  --scope "$(az storage account show --name "$SA_NAME" --resource-group "$RG_NAME" --query id -o tsv)" \
+  --only-show-errors >/dev/null
+
+for c in tfstate-bootstrap tfstate-dev tfstate-staging tfstate-prod; do
   az storage container create --name "$c" --account-name "$SA_NAME" --auth-mode login >/dev/null || \
     az storage container create --name "$c" --account-name "$SA_NAME"
 done
@@ -41,6 +49,6 @@ done
 echo "Remote state ready:"
 echo "  resource_group  = $RG_NAME"
 echo "  storage_account = $SA_NAME"
-echo "  containers      = tfstate-dev, tfstate-staging, tfstate-prod"
+echo "  containers      = tfstate-bootstrap, tfstate-dev, tfstate-staging, tfstate-prod"
 echo
 echo "Set a budget alert in the portal (Cost Management) before first terraform apply."
