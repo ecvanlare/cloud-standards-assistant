@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "eval/results/**"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deploy dev, then promote up to this environment
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  dev:
+    if: vars.AZURE_OIDC_CONFIGURED == 'true'
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: dev
+    secrets: inherit
+
+  staging:
+    needs: dev
+    if: inputs.target == 'staging' || inputs.target == 'prod'
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: staging
+      source_acr: ${{ needs.dev.outputs.acr_name }}
+    secrets: inherit
+
+  prod:
+    needs: staging
+    if: inputs.target == 'prod'
+    uses: ./.github/workflows/deploy-env.yml
+    with:
+      environment: prod
+      source_acr: ${{ needs.staging.outputs.acr_name }}
+    secrets: inherit
