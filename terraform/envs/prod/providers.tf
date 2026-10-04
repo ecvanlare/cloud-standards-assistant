@@ -1,10 +1,14 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.11.0"
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.40"
+    }
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
@@ -26,5 +30,9 @@ provider "azurerm" {
     }
   }
 
+  subscription_id = var.subscription_id
+}
+
+provider "azapi" {
   subscription_id = var.subscription_id
 }

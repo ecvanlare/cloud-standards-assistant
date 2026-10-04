@@ -42,6 +42,12 @@ variable "foundry_account_principal_id" {
   description = "System-assigned identity of the Foundry AIServices account (Azure AI Search agent tool)."
 }
 
+variable "operator_object_ids" {
+  type        = list(string)
+  description = "Extra Entra object IDs (people or the CI identity) that run Search, agent and eval steps."
+  default     = []
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

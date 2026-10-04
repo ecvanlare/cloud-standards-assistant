@@ -45,8 +45,14 @@ variable "embedding_capacity" {
 
 variable "serving_image_tag" {
   type        = string
-  description = "ACR tag for the serving Container App image (pushed by serving/scripts/deploy-serving.sh)."
+  description = "ACR tag for the serving image. The deploy workflow passes the commit SHA."
   default     = "latest"
+}
+
+variable "operator_object_ids" {
+  type        = list(string)
+  description = "Entra object IDs, besides whoever applies, that run Search, agent and eval steps (e.g. you and the CI identity)."
+  default     = []
 }
 
 variable "serving_min_replicas" {
