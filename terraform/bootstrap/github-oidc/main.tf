@@ -70,7 +70,7 @@ resource "azurerm_federated_identity_credential" "github" {
   parent_id = each.value.id
   audience  = ["api://AzureADTokenExchange"]
   issuer    = local.github_issuer
-  subject   = "repo:${var.github_repository}:environment:${each.key}"
+  subject   = "${var.github_subject_prefix}:environment:${each.key}"
 }
 
 resource "azurerm_role_assignment" "contributor" {
