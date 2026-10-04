@@ -1,40 +1,15 @@
-# Retrieval (Azure AI Search)
+# Search
 
-Index definitions, blob datasource, skillsets (chunk + embed), and hybrid query scripts for the standards corpus.
+Azure AI Search definitions for the standards corpus. They are data-plane objects, so `scripts/publish.sh` applies them rather than Terraform.
 
-## Layout
+| File | Role |
+|---|---|
+| `corpus-manifest.json` | Public sources (WAF, ASB, NIST, Terraform) with citation metadata |
+| `index.json` | Hybrid index: `content`, 1536-d `contentVector`, citation fields |
+| `datasource.json` | Blob source, read by the Search managed identity |
+| `skillset-default.json`, `skillset-tuned.json` | Split 2000/500 or 800/150, then embed with `text-embedding-3-small` |
+| `indexer-default.json`, `indexer-tuned.json` | Project chunks into `corpus-default` and `corpus-tuned` |
+| `scripts/publish.sh` | `fetch`, `upload`, `definitions`, `index`, or `all` |
+| `examples/` | A cited retrieval sample |
 
-| Path | Role |
-|------|------|
-| `index.json` | Hybrid index template (`content` + `contentVector` 1536-d, citation fields) |
-| `datasource.json` | Blob datasource → env `corpus` container (Search MI) |
-| `skillset-default.json` | Split 2000/500 + `text-embedding-3-small` |
-| `skillset-tuned.json` | Split 800/150 (better for numbered controls / nested sections) |
-| `indexer-*.json` | Indexers projecting chunks into `corpus-default` / `corpus-tuned` |
-| `corpus-manifest.json` | Public source list (WAF, Azure Security Benchmark, NIST, Terraform) |
-| `scripts/` | Fetch, upload, deploy, run indexers, example hybrid query |
-| `CHUNKING.md` | Default vs tuned retrieval notes |
-| `examples/` | Cited retrieval sample |
-
-## Prerequisites
-
-- `dev` stack applied (`terraform/envs/dev`)
-- Search service MI has Storage Blob Data Reader + Cognitive Services User (identity module)
-- Deployer has Search Index Data Contributor on the Search service (identity module — needed to query index documents; Service Contributor alone is not enough)
-- Azure CLI logged in; Terraform state available for outputs
-
-## Run (dev)
-
-```bash
-./search/scripts/fetch-corpus.sh
-./search/scripts/upload-corpus.sh
-./search/scripts/deploy-search.sh
-./search/scripts/run-indexers.sh
-./search/scripts/query-example.sh
-```
-
-## Citations
-
-Chunks store `framework`, `section`, `title`, and `source_path`. Upload sets blob Metadata keys `citeframework` / `citesection` / `citetitle`; skillsets project them from `/document/citeframework` (not `metadata_citeframework` — that path is empty for custom keys). Hybrid queries return those fields with the content snippet.
-
-Foundry IQ grounding is out of scope.
+Run with `make search ENV=dev`; the deploy workflow runs it on every deploy. Upload sets blob metadata `citeframework`, `citesection` and `citetitle`, which the skillsets read from `/document/cite*`.
