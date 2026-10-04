@@ -10,11 +10,11 @@ Agentic RAG on Azure (Foundry + Terraform, UK South): hybrid vector retrieval, m
 |---|---|
 | RAG / vector store | Azure AI Search index (`corpus-tuned`); hybrid keyword + vector (`vectorQueries`); embeddings `text-embedding-3-small` |
 | Ingestion | Blob corpus → indexer → skillsets (chunk + embed) → citation fields (`framework` / `section` / `title`) |
-| Agent + tools | Foundry Agent Service (`gpt-5-mini`); Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
+| Agent + tools | Foundry Agent Service (agent `gpt-5.4-mini`, eval judge `gpt-5-mini`); Search tool; Azure Functions OpenAPI (ASB version, Terraform Registry proxy); multi-tool turns; cite-or-defer |
 | Application | Chat UI + BFF on Azure Container Apps; HTTP scale (incl. toward zero); Key Vault + user-assigned MI; Entra to Foundry |
 | Observability | BFF OpenTelemetry → Application Insights; Foundry Control Plane traces (latency, tokens, estimated cost) |
 | Safety | Foundry RAI / content filters (`csa-blocking-medium`); jailbreak / XPIA / PII instruction guards; red-team notes |
-| Evaluation | Golden set (≥50); groundedness / relevance / safety; CI schema gate; Foundry cloud Evaluations |
+| Evaluation | Golden set (≥50); coherence / relevance / response completeness / safety; CI schema gate; Foundry cloud Evaluations |
 | Cost / ops | Tool-path routing (Function vs Search); Terraform `dev`/`staging`/`prod`; `dev-up` / `dev-down` |
 
 Answers standards questions from a public corpus (WAF, ASB / MCSB, NIST, Terraform docs); defers outside knowledge (e.g. live pricing).
@@ -132,7 +132,7 @@ Detail: [`docs/COST-PER-INTERACTION.md`](docs/COST-PER-INTERACTION.md). AI Searc
 
 ## Safety
 
-RAI policy on the chat deployment + instruction guards. Red-team table: [`safety/RED-TEAM.md`](safety/RED-TEAM.md). Policy notes: [`safety/content-safety.md`](safety/content-safety.md).
+RAI policy on the agent and chat (judge) deployments + instruction guards. Red-team table: [`safety/RED-TEAM.md`](safety/RED-TEAM.md). Policy notes: [`safety/content-safety.md`](safety/content-safety.md).
 
 ## Design decisions
 
