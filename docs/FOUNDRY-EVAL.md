@@ -44,7 +44,7 @@ What it does:
 1. Upserts the storage connection
 2. Exports `eval/golden_set.jsonl` → `eval/results/foundry-dataset.jsonl` (`query` = `question`; drops `out-of-scope` by default)
 3. Uploads a versioned dataset via `AIProjectClient.datasets.upload_file`
-4. Creates an eval (coherence + relevance builtins) and a run targeting agent `cloud-devops-standards-assistant` (version from `agents/.last-deploy.json` when present)
+4. Creates an eval (coherence, relevance and response completeness builtins) and a run targeting agent `cloud-devops-standards-assistant` (version from `agents/.last-deploy.json` when present)
 5. Polls until complete; writes `eval/results/foundry-eval-latest.json` (includes `report_url` when the API returns one)
 
 Dataset upload uses `AIProjectClient`. Eval create / run / poll use the project **OpenAI-compatible REST** path (`…/openai/v1/evals`) via `httpx`, because the `openai` Python SDK’s TypedDict transform crashes on Python 3.9 (`NameError: Input is not defined`). Same Foundry API either way.
@@ -65,7 +65,21 @@ python3 eval/scripts/run-foundry-eval.py --dataset-id '<id-from-upload>' --skip-
 Omit `--limit` / set `EVAL_LIMIT` high. **Cost warning:** each row invokes the agent (Search + tools) plus judge-model tokens for every testing criterion. Sixty-five rows is many agent + judge calls — run smoke first.
 
 ```bash
-EVAL_LIMIT=65 ./eval/scripts/run-foundry-eval.sh
+EVAL_LIMIT=65 ./eval/scripts/run-foundry-eval.sh --with-agent-evaluators --run-name full-v<N>
+```
+
+Each run also writes `eval/results/foundry-eval-<run-name>.json` with `pass_rates` per criterion.
+
+Evaluator choices follow Microsoft's [built-in evaluators reference](https://learn.microsoft.com/en-us/azure/foundry/concepts/built-in-evaluators):
+
+- `builtin.response_completeness` compares the answer with `item.ground_truth` (recall against the reference answer). Groundedness is not used: it scores the answer against retrieved context, and Microsoft's [agent evaluators](https://learn.microsoft.com/en-us/azure/foundry/concepts/evaluation-evaluators/agent-evaluators) page lists Azure AI Search calls as limited support for `groundedness` and the tool-call evaluators.
+- `--with-agent-evaluators` adds `builtin.task_adherence` (on `sample.output_items`) and `builtin.intent_resolution`.
+- The judge is `gpt-5-mini` (`CHAT_DEPLOYMENT`), passed as `deployment_name`. It is separate from the agent model so scores stay comparable across agent changes.
+
+A full run can take over an hour. The script waits up to `--timeout-seconds` (default 7200). If it times out, the run keeps going in Foundry; resume polling instead of starting a new (billed) run:
+
+```bash
+./eval/scripts/run-foundry-eval.sh --eval-id '<eval_...>' --run-id '<evalrun_...>' --run-name full-v<N>
 ```
 
 ## Out-of-scope rows
@@ -74,10 +88,8 @@ Rows with `category: out-of-scope` (or `ground_truth` starting with `OUT OF SCOP
 
 ## Region / evaluator notes (UK South)
 
-- Start with **coherence** + **relevance** (`builtin.*`) and `gpt-5-mini` as judge (`CHAT_DEPLOYMENT`).
+- Default criteria: **coherence**, **relevance**, **response completeness** (`builtin.*`), with `gpt-5-mini` as judge (`CHAT_DEPLOYMENT`).
 - Safety builtins (e.g. `builtin.violence`) may be unavailable or constrained by region; use `run-foundry-eval.py --with-safety` only after smoke succeeds.
-- Mapping `ground_truth` into relevance is best-effort; groundedness-style judges are optional follow-ups if your project supports them.
-
 ## Dual path
 
 | Path | When | Where scores live |
