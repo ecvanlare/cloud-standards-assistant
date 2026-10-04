@@ -4,7 +4,7 @@ Cited answers to cloud-standards questions (Azure Well-Architected Framework, Az
 
 ![Demo — multi-tool answer with citations and trace](docs/screenshots/demo.gif)
 
-*One question, three tools: Azure AI Search for ASB Key Vault guidance, the live ASB version, and the latest `azurerm` provider, with citations and a `trace_id`.*
+*One question, three tools: Azure AI Search for ASB guidance, the live ASB version, and the latest `azurerm` provider, each with a source, plus a `trace_id`.*
 
 ## The problem
 
@@ -12,34 +12,34 @@ Platform teams answer the same standards questions every week, and the answers h
 
 ## What it does
 
-- **Cites its sources.** Guidance comes from a public corpus indexed in Azure AI Search, and every answer names the framework, section and title.
+- **Cites its sources.** Guidance comes from a public corpus indexed in Azure AI Search, and answers cite the retrieved source.
 - **Checks live facts.** The current ASB version and Terraform provider versions come from two Azure Functions, not the model.
 - **Says when it doesn't know.** Pricing, live inventory and questions without evidence are deferred, not guessed.
-- **Is traceable.** Every answer returns a `trace_id` that joins the UI request to the agent's tool calls in Application Insights.
+- **Is traceable.** Every answer returns a `trace_id`. With the conversation ID, it links the UI request to the agent's tool calls in Application Insights and Foundry.
 
 ## Results
 
-Foundry cloud evaluation on the 62-question golden set, with the same `gpt-5-mini` judge for every run. Full history: [`eval/results/history.csv`](eval/results/history.csv).
+Foundry cloud evaluation on the 62 in-scope questions from the golden set, with the same `gpt-5-mini` judge for every run. Full history: [`eval/results/history.csv`](eval/results/history.csv).
 
 | Agent version | Change | Coherence | Relevance | Response completeness |
 |---|---|---|---|---|
 | v15 | Baseline: `gpt-5-mini`, 50K TPM | 67.7% | 48.4% | 46.8% |
 | v17 | Agent model `gpt-5.4-mini` (Foundry tool support for Search + OpenAPI) | 100.0% | 96.8% | 93.5% |
 
-From v15 to v17, relevance rose from 48.4% to 96.8% and response completeness from 46.8% to 93.5%. Every deploy re-runs an 8-question evaluation and blocks promotion if scores drop ([`eval/thresholds.json`](eval/thresholds.json)).
+From v15 to v17, relevance rose from 48.4% to 96.8% and response completeness from 46.8% to 93.5%. Median latency on the full v17 run was 3.4 s (P95 5.4 s). Every deploy re-runs an 8-question evaluation and blocks promotion if any score falls below its floor ([`eval/thresholds.json`](eval/thresholds.json)).
 
 ## Cost
 
-- **Idle:** AI Search Basic is the main fixed cost (roughly $75 a month). Models are pay-per-token, and the web app scales to zero.
-- **Per question:** version lookups go straight to a Function. Only guidance questions pay for retrieval and the longer synthesis.
+- **Idle:** AI Search is the main fixed cost, because it bills while idle. Models are pay-per-token, and the web app scales to zero.
+- **Per question:** version lookups go straight to a Function. Only guidance questions pay for retrieval and the longer synthesis. Across the 62-question v17 eval the agent averaged about 3.1K tokens per question, and a blocked prompt used none ([evidence](docs/EVIDENCE.md#cost-per-question)).
 - **Off switch:** one workflow destroys an environment and purges the soft-deleted Foundry account.
 
 ## Security and responsible AI
 
 - **No secrets in CI.** GitHub OIDC signs in to one managed identity per environment. Each identity may grant only the roles the stack needs, enforced by a role-assignment condition.
-- **No keys at runtime.** The app, agent, Search indexer and Functions use managed identities and Entra ID. The one app secret lives in Key Vault.
-- **Content filters as code.** The RAI policy `csa-blocking-medium` (Medium blocking on harm categories, plus Jailbreak and Protected Material) is in Terraform and attached to both model deployments and the agent.
-- **Red-teamed.** All five attempts (citation bypass, prompt leak, cross-prompt injection, PII bait, violent content) were handled. See [`docs/EVIDENCE.md`](docs/EVIDENCE.md#red-team).
+- **Identities, not keys, at runtime.** The app, agent, Search indexer and Functions use managed identities and Entra ID. The one app secret lives in Key Vault. The exception is the Functions host storage, which still uses an account key ([trade-offs](docs/DECISIONS.md#known-well-architected-trade-offs)).
+- **Content filters as code.** The RAI policy `csa-blocking-medium` (Medium blocking on harm categories, plus Jailbreak and Protected Material) is in Terraform and attached to the chat and agent model deployments.
+- **Red-teamed.** All five attempts (citation bypass, prompt leak, cross-prompt injection, PII bait, violent content) were handled on agent v10–v11, and the prompt injection was re-checked on v17. See [`docs/EVIDENCE.md`](docs/EVIDENCE.md#red-team).
 
 ## How it's delivered
 
