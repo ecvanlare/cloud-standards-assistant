@@ -32,6 +32,7 @@ load_tf_outputs() {
   FOUNDRY_PROJECT_NAME="$(terraform output -raw foundry_project_name)"
   FOUNDRY_PROJECT_ID="$(terraform output -raw foundry_project_id)"
   CHAT_DEPLOYMENT="$(terraform output -raw chat_deployment_name)"
+  AGENT_DEPLOYMENT="$(terraform output -raw agent_deployment_name)"
   SEARCH_ENDPOINT="$(terraform output -raw search_endpoint)"
   RG="$(terraform output -raw resource_group_name)"
   FUNCTION_BASE_URL="$(terraform output -raw function_base_url 2>/dev/null || true)"

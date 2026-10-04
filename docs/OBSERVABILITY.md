@@ -38,7 +38,13 @@ Outputs (sensitive connection string): `application_insights_name`, `application
 
 ## Wire Foundry project to Application Insights
 
-Terraform provisions App Insights, Function telemetry, and the serving BFF connection string. Attach the Foundry project in the portal (Control Plane tracing):
+Terraform provisions App Insights, Function telemetry, and the serving BFF connection string. `./agents/scripts/deploy-agent.sh` (run by `dev-up.sh`) upserts the Foundry project connection `csa-appinsights` → `appi-csa-{env}`, so agent **Traces** and **Monitor** survive every rebuild:
+
+```bash
+./agents/scripts/ensure-appinsights-connection.sh
+```
+
+Portal fallback (Control Plane tracing):
 
 1. Open **Azure AI Foundry** → project `proj-csa-{env}`.
 2. Open **Tracing** / **Application Insights** (label varies by portal revision).

@@ -40,7 +40,7 @@ def main() -> int:
     parser.add_argument("--project-endpoint", default=os.environ.get("FOUNDRY_PROJECT_ENDPOINT"))
     parser.add_argument("--connection-name", default=os.environ.get("SEARCH_CONNECTION_NAME", "csa-ai-search"))
     parser.add_argument("--index-name", default=os.environ.get("INDEX_NAME", "corpus-tuned"))
-    parser.add_argument("--model", default=os.environ.get("CHAT_DEPLOYMENT"))
+    parser.add_argument("--model", default=os.environ.get("AGENT_DEPLOYMENT"))
     parser.add_argument("--function-base-url", default=os.environ.get("FUNCTION_BASE_URL", ""))
     parser.add_argument(
         "--registry-function-base-url",
@@ -72,7 +72,7 @@ def main() -> int:
         return 1
 
     definition = load_definition()
-    model = args.model or definition.get("model", "gpt-5-mini")
+    model = args.model or definition["model"]
     display_name = definition["name"]
     agent_name = definition.get("agent_name") or "cloud-devops-standards-assistant"
     instructions = load_instructions()
@@ -105,7 +105,13 @@ def main() -> int:
     credential = DefaultAzureCredential(exclude_interactive_browser_credential=False)
     client = AIProjectClient(endpoint=args.project_endpoint, credential=credential)
 
-    connection = client.connections.get(args.connection_name)
+    connection = next(
+        (c for c in client.connections.list() if c.name == args.connection_name),
+        None,
+    )
+    if connection is None:
+        print(f"Search connection not found: {args.connection_name}", file=sys.stderr)
+        return 1
     connection_id = connection.name
     print(f"Using Search connection: {connection_id}")
 

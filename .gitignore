@@ -51,6 +51,7 @@ AGENTS.md
 eval/results/**
 !eval/results/.gitkeep
 !eval/results/latest-summary.md
+!eval/results/history.csv
 traces/
 *.log
 

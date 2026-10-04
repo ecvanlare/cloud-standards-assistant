@@ -6,10 +6,11 @@ Definition and scripts for the **Cloud & DevOps Standards Assistant**.
 
 | Path | Role |
 |------|------|
-| `standards-assistant.json` | Name, model (`gpt-5-mini`), Search + OpenAPI tool config |
+| `standards-assistant.json` | Name, model (`gpt-5.4-mini`; `deploy-agent.sh` passes Terraform `agent_deployment_name`), Search + OpenAPI tool config |
 | `instructions.md` | When to Search vs Function vs Registry vs defer |
 | `scripts/ensure-search-connection.sh` | Foundry project connection → Azure AI Search (Entra ID) |
-| `scripts/deploy-agent.sh` | Upsert connection + create agent version |
+| `scripts/ensure-appinsights-connection.sh` | Foundry project connection → Application Insights (agent Traces / Monitor) |
+| `scripts/deploy-agent.sh` | Upsert connections + create agent version |
 | `scripts/run-demo.sh` | Conversation + response demo |
 
 Tool OpenAPI specs and Function source live under [`tools/`](../tools/).

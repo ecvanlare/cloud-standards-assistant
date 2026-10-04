@@ -81,12 +81,12 @@ Common tags: `workload`, `environment`, `region`, `managed_by=terraform`, `proje
 - Key Vault (RBAC mode)
 - Azure AI Search
 - Microsoft Foundry (AIServices account + project)
-- Model deployments: `gpt-5-mini`, `text-embedding-3-small`
+- Model deployments: `gpt-5.4-mini` (agent), `gpt-5-mini` (eval judge), `text-embedding-3-small`. The agent uses its own deployment because Foundry Agent Service lists `gpt-5-mini` as unsupported for the Azure AI Search and OpenAPI tools ([tool support by region and model](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/limits-quotas-regions)). The judge stays on `gpt-5-mini` so scores stay comparable across agent versions.
 - Container Apps environment + ACR + serving Container App (UI + BFF) — see [`serving/`](../serving/)
 - User-assigned managed identity + RBAC to storage, KV, Foundry, Search, ACR pull
 - Search system-assigned identity: Storage Blob Data Reader + Cognitive Services User (indexer + embedding skill)
-- Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents); ACR Push
-- Foundry project system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
+- Deployer (`azurerm_client_config` object ID): Search Index Data Contributor (query index documents); ACR Push; Foundry User on the Foundry account (agent deploy, connections, evals)
+- Foundry project system-assigned identity: Search Index Data Contributor + Search Service Contributor (agent Azure AI Search tool); Foundry User on the Foundry account (cloud evals call the judge model and agent); Storage Blob Data Contributor on corpus storage (Datasets / Evaluations)
 - Foundry account system-assigned identity: Search Index Data Contributor (agent Azure AI Search tool)
 - Azure Function App (Flex Consumption FC1) for ASB version tool — see [`tools/`](../tools/)
 - Second Azure Function App (Flex Consumption FC1) for Terraform Registry proxy — see [`tools/`](../tools/); local vs pipeline deploy map in [`DEPLOYMENT.md`](DEPLOYMENT.md)

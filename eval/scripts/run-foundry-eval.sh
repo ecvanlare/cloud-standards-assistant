@@ -12,17 +12,25 @@ DATASET_NAME="${FOUNDRY_DATASET_NAME:-csa-golden-smoke}"
 load_tf_outputs
 export FOUNDRY_PROJECT_ENDPOINT CHAT_DEPLOYMENT STORAGE_CONNECTION_NAME
 
-python3 -m pip install --quiet --disable-pip-version-check \
-  "azure-identity" "azure-ai-projects>=2.0.0" "azure-storage-blob" "httpx" >/dev/null
+# shellcheck source=/dev/null
+source "${ROOT}/scripts/_python.sh"
+use_repo_python
 
-echo "== Ensure storage connection (${STORAGE_CONNECTION_NAME}) =="
-"${SCRIPT_DIR}/ensure-storage-connection.sh"
+RESUME=0
+for arg in "$@"; do
+  [[ "${arg}" == --run-id* ]] && RESUME=1
+done
 
 OUT_FILE="${EVAL_DIR}/results/foundry-dataset.jsonl"
-echo "== Export golden → Foundry JSONL (limit=${LIMIT}, exclude out-of-scope) =="
-python3 "${SCRIPT_DIR}/export-foundry-dataset.py" \
-  --limit "${LIMIT}" \
-  --output "${OUT_FILE}"
+if [[ "${RESUME}" == "0" ]]; then
+  echo "== Ensure storage connection (${STORAGE_CONNECTION_NAME}) =="
+  "${SCRIPT_DIR}/ensure-storage-connection.sh"
+
+  echo "== Export golden → Foundry JSONL (limit=${LIMIT}, exclude out-of-scope) =="
+  python3 "${SCRIPT_DIR}/export-foundry-dataset.py" \
+    --limit "${LIMIT}" \
+    --output "${OUT_FILE}"
+fi
 
 echo "== Run Foundry cloud eval =="
 python3 "${SCRIPT_DIR}/run-foundry-eval.py" \

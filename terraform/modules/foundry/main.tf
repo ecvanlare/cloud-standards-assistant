@@ -44,6 +44,8 @@ resource "azurerm_cognitive_deployment" "chat" {
     name     = "GlobalStandard"
     capacity = var.chat_capacity
   }
+
+  depends_on = [azurerm_cognitive_account_project.this]
 }
 
 resource "azurerm_cognitive_deployment" "embedding" {
@@ -60,5 +62,25 @@ resource "azurerm_cognitive_deployment" "embedding" {
     name     = "GlobalStandard"
     capacity = var.embedding_capacity
   }
+
+  depends_on = [azurerm_cognitive_deployment.chat]
+}
+
+resource "azurerm_cognitive_deployment" "agent" {
+  name                 = var.agent_deployment_name
+  cognitive_account_id = azurerm_cognitive_account.this.id
+
+  model {
+    format  = "OpenAI"
+    name    = var.agent_model_name
+    version = var.agent_model_version
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = var.agent_capacity
+  }
+
+  depends_on = [azurerm_cognitive_deployment.embedding]
 }
 

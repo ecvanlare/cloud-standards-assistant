@@ -49,6 +49,28 @@ variable "chat_capacity" {
   default     = 10
 }
 
+variable "agent_model_name" {
+  type        = string
+  description = "Catalog model name for the agent. Must support the Azure AI Search and OpenAPI agent tools (Foundry Agent Service tool support by model)."
+  default     = "gpt-5.4-mini"
+}
+
+variable "agent_model_version" {
+  type    = string
+  default = "2026-03-17"
+}
+
+variable "agent_deployment_name" {
+  type    = string
+  default = "gpt-5.4-mini"
+}
+
+variable "agent_capacity" {
+  type        = number
+  description = "Throughput units (thousands of tokens per minute) for the agent model."
+  default     = 50
+}
+
 variable "embedding_model_name" {
   type    = string
   default = "text-embedding-3-small"

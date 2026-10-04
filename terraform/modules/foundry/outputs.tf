@@ -34,6 +34,10 @@ output "chat_deployment_name" {
   value = azurerm_cognitive_deployment.chat.name
 }
 
+output "agent_deployment_name" {
+  value = azurerm_cognitive_deployment.agent.name
+}
+
 output "embedding_deployment_name" {
   value = azurerm_cognitive_deployment.embedding.name
 }

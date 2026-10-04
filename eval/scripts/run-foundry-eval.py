@@ -39,42 +39,47 @@ def openai_v1_base(project_endpoint: str) -> str:
     return project_endpoint.rstrip("/") + "/openai/v1"
 
 
-def build_testing_criteria(model_deployment: str, *, with_safety: bool) -> list[dict]:
+def _criterion(name: str, evaluator_name: str, model_deployment: str, data_mapping: dict) -> dict:
+    return {
+        "type": "azure_ai_evaluator",
+        "name": name,
+        "evaluator_name": evaluator_name,
+        "initialization_parameters": {"deployment_name": model_deployment},
+        "data_mapping": data_mapping,
+    }
+
+
+def build_testing_criteria(
+    model_deployment: str, *, with_safety: bool, with_agent_evaluators: bool
+) -> list[dict]:
+    query_response = {
+        "query": "{{item.query}}",
+        "response": "{{sample.output_text}}",
+    }
     criteria: list[dict] = [
-        {
-            "type": "azure_ai_evaluator",
-            "name": "coherence",
-            "evaluator_name": "builtin.coherence",
-            "initialization_parameters": {"model": model_deployment},
-            "data_mapping": {
-                "query": "{{item.query}}",
-                "response": "{{sample.output_text}}",
-            },
-        },
-        {
-            "type": "azure_ai_evaluator",
-            "name": "relevance",
-            "evaluator_name": "builtin.relevance",
-            "initialization_parameters": {"model": model_deployment},
-            "data_mapping": {
-                "query": "{{item.query}}",
-                "response": "{{sample.output_text}}",
-            },
-        },
+        _criterion("coherence", "builtin.coherence", model_deployment, query_response),
+        _criterion("relevance", "builtin.relevance", model_deployment, query_response),
+        _criterion(
+            "response_completeness",
+            "builtin.response_completeness",
+            model_deployment,
+            {"response": "{{sample.output_text}}", "ground_truth": "{{item.ground_truth}}"},
+        ),
     ]
-    if with_safety:
+    if with_agent_evaluators:
         criteria.append(
-            {
-                "type": "azure_ai_evaluator",
-                "name": "violence",
-                "evaluator_name": "builtin.violence",
-                "initialization_parameters": {"model": model_deployment},
-                "data_mapping": {
-                    "query": "{{item.query}}",
-                    "response": "{{sample.output_text}}",
-                },
-            }
+            _criterion(
+                "task_adherence",
+                "builtin.task_adherence",
+                model_deployment,
+                {"query": "{{item.query}}", "response": "{{sample.output_items}}"},
+            )
         )
+        criteria.append(
+            _criterion("intent_resolution", "builtin.intent_resolution", model_deployment, query_response)
+        )
+    if with_safety:
+        criteria.append(_criterion("violence", "builtin.violence", model_deployment, query_response))
     return criteria
 
 
@@ -117,6 +122,91 @@ class FoundryEvalsRest:
         return self._request("GET", f"/evals/{eval_id}/runs/{run_id}")
 
 
+def _as_count(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _criterion_label(item: dict) -> str | None:
+    for key in ("testing_criteria", "name", "evaluator_name", "criterion"):
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _rate_from_counts(item: dict) -> float | None:
+    passed = _as_count(item.get("passed"))
+    failed = _as_count(item.get("failed"))
+    if passed is None or failed is None:
+        return None
+    total = passed + failed
+    if total <= 0:
+        return None
+    return 100.0 * passed / total
+
+
+def pass_rates(eval_run: dict) -> dict[str, float | None]:
+    """Pass rate (0–100) per criterion, from whatever list the run payload returns."""
+    lists: list[list] = []
+    containers: list[dict] = [eval_run]
+    for key in ("result", "results_summary", "summary"):
+        nested = eval_run.get(key)
+        if isinstance(nested, dict):
+            containers.append(nested)
+    list_keys = (
+        "per_testing_criteria_results",
+        "per_criteria_results",
+        "testing_criteria_results",
+        "criteria_results",
+    )
+    for container in containers:
+        for key in list_keys:
+            value = container.get(key)
+            if isinstance(value, list):
+                lists.append(value)
+    rates: dict[str, float | None] = {}
+    for items in lists:
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            label = _criterion_label(item)
+            rate = _rate_from_counts(item)
+            if label and rate is not None:
+                rates[label] = rate
+    return rates
+
+
+def wait_for_run(
+    rest: FoundryEvalsRest,
+    evaluation_id: str,
+    eval_run: dict,
+    *,
+    poll_seconds: int,
+    timeout_seconds: int,
+) -> dict | None:
+    run_id = eval_run["id"]
+    deadline = time.time() + timeout_seconds
+    status = eval_run.get("status")
+    while status in (None, "queued", "in_progress", "running", "pending"):
+        if time.time() > deadline:
+            print(f"Timed out waiting for run {run_id} (last status={status})", file=sys.stderr)
+            print(f"Resume with --eval-id {evaluation_id} --run-id {run_id}", file=sys.stderr)
+            return None
+        time.sleep(poll_seconds)
+        eval_run = rest.get_run(evaluation_id, run_id)
+        status = eval_run.get("status")
+        print(f"  status={status}")
+    return eval_run
+
+
+def redact_run(eval_run: dict) -> dict:
+    """Drop bulky inputs. Leave score fields intact. URLs stay in the gitignored file only."""
+    drop = {"data_source", "input_messages", "metadata"}
+    return {key: value for key, value in eval_run.items() if key not in drop}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-endpoint", default=os.environ.get("FOUNDRY_PROJECT_ENDPOINT"))
@@ -142,11 +232,22 @@ def main() -> int:
     parser.add_argument("--eval-name", default="csa-agent-cloud-eval")
     parser.add_argument("--run-name", default=None)
     parser.add_argument("--poll-seconds", type=int, default=15)
-    parser.add_argument("--timeout-seconds", type=int, default=1800)
+    parser.add_argument("--timeout-seconds", type=int, default=7200)
+    parser.add_argument(
+        "--eval-id",
+        default=None,
+        help="With --run-id: resume polling an existing run instead of creating one",
+    )
+    parser.add_argument("--run-id", default=None)
     parser.add_argument(
         "--with-safety",
         action="store_true",
         help="Also attach builtin.violence (may be unavailable in some regions)",
+    )
+    parser.add_argument(
+        "--with-agent-evaluators",
+        action="store_true",
+        help="Also attach builtin.task_adherence and builtin.intent_resolution",
     )
     parser.add_argument(
         "--skip-upload",
@@ -161,14 +262,46 @@ def main() -> int:
     if not args.model:
         print("CHAT_DEPLOYMENT / --model is required (judge deployment)", file=sys.stderr)
         return 1
+    if bool(args.eval_id) != bool(args.run_id):
+        print("--eval-id and --run-id must be set together", file=sys.stderr)
+        return 1
 
     deploy = load_last_deploy()
     agent_name = args.agent_name or deploy.get("name") or "cloud-devops-standards-assistant"
     agent_version = args.agent_version or deploy.get("version")
 
+    credential = DefaultAzureCredential()
+
+    if args.run_id:
+        rest = FoundryEvalsRest(args.project_endpoint, credential)
+        try:
+            eval_run = rest.get_run(args.eval_id, args.run_id)
+            print(f"Resuming run {args.run_id} (status={eval_run.get('status')})")
+            eval_run = wait_for_run(
+                rest,
+                args.eval_id,
+                eval_run,
+                poll_seconds=args.poll_seconds,
+                timeout_seconds=args.timeout_seconds,
+            )
+        finally:
+            rest.close()
+        if eval_run is None:
+            return 1
+        data_source = eval_run.get("data_source") or {}
+        target = data_source.get("target") or {}
+        return write_summary(
+            args,
+            eval_run,
+            evaluation_id=args.eval_id,
+            run_name=args.run_name or eval_run.get("name") or args.run_id,
+            dataset_id=(data_source.get("source") or {}).get("id"),
+            agent_name=target.get("name") or agent_name,
+            agent_version=target.get("version") or agent_version,
+        )
+
     from azure.ai.projects import AIProjectClient
 
-    credential = DefaultAzureCredential()
     project_client = AIProjectClient(endpoint=args.project_endpoint, credential=credential)
 
     dataset_id = args.dataset_id
@@ -203,7 +336,11 @@ def main() -> int:
         "required": ["query"],
     }
 
-    testing_criteria = build_testing_criteria(args.model, with_safety=args.with_safety)
+    testing_criteria = build_testing_criteria(
+        args.model,
+        with_safety=args.with_safety,
+        with_agent_evaluators=args.with_agent_evaluators,
+    )
     rest = FoundryEvalsRest(args.project_endpoint, credential)
     try:
         evaluation = rest.create_eval(
@@ -246,25 +383,45 @@ def main() -> int:
                 },
             },
         )
-        run_id = eval_run["id"]
-        print(f"Evaluation run started: {run_id}")
-
-        deadline = time.time() + args.timeout_seconds
-        status = eval_run.get("status")
-        while status in (None, "queued", "in_progress", "running", "pending"):
-            if time.time() > deadline:
-                print(f"Timed out waiting for run {run_id} (last status={status})", file=sys.stderr)
-                return 1
-            time.sleep(args.poll_seconds)
-            eval_run = rest.get_run(evaluation_id, run_id)
-            status = eval_run.get("status")
-            print(f"  status={status}")
+        print(f"Evaluation run started: {eval_run['id']}")
+        eval_run = wait_for_run(
+            rest,
+            evaluation_id,
+            eval_run,
+            poll_seconds=args.poll_seconds,
+            timeout_seconds=args.timeout_seconds,
+        )
     finally:
         rest.close()
+    if eval_run is None:
+        return 1
+    return write_summary(
+        args,
+        eval_run,
+        evaluation_id=evaluation_id,
+        run_name=run_name,
+        dataset_id=dataset_id,
+        agent_name=agent_name,
+        agent_version=agent_version,
+    )
 
+
+def write_summary(
+    args: argparse.Namespace,
+    eval_run: dict,
+    *,
+    evaluation_id: str,
+    run_name: str,
+    dataset_id: str | None,
+    agent_name: str,
+    agent_version: str | None,
+) -> int:
+    run_id = eval_run["id"]
+    status = eval_run.get("status")
     report_url = eval_run.get("report_url") or eval_run.get("result_urls") or eval_run.get("result_url")
     if isinstance(report_url, list):
         report_url = report_url[0] if report_url else None
+    rates = pass_rates(eval_run)
     summary = {
         "evaluation_id": evaluation_id,
         "run_id": run_id,
@@ -276,13 +433,20 @@ def main() -> int:
         "model": args.model,
         "run_name": run_name,
         "transport": "rest-httpx",
+        "pass_rates": rates,
+        "run": redact_run(eval_run),
     }
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(summary, indent=2) + "\n"
     out_path = RESULTS_DIR / "foundry-eval-latest.json"
-    out_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(summary, indent=2))
-    if report_url:
-        print(f"Report URL: {report_url}")
+    out_path.write_text(payload, encoding="utf-8")
+    stamp_path = RESULTS_DIR / f"foundry-eval-{run_name}.json"
+    stamp_path.write_text(payload, encoding="utf-8")
+    printable = {key: value for key, value in summary.items() if key not in ("report_url", "run")}
+    print(json.dumps(printable, indent=2))
+    print(f"Wrote {out_path}")
+    if rates:
+        print("pass_rates: " + ", ".join(f"{name}={rate:.1f}%" for name, rate in rates.items() if rate is not None))
     if status not in ("completed", "succeeded", "failed", "cancelled"):
         return 1
     if status == "failed" and not report_url:

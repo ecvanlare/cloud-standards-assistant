@@ -43,6 +43,12 @@ resource "azurerm_role_assignment" "deployer_search_index_data_contributor" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
+resource "azurerm_role_assignment" "deployer_foundry_user" {
+  scope                = var.cognitive_account_id
+  role_definition_name = "Foundry User"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 resource "azurerm_role_assignment" "search_storage_blob_data_reader" {
   scope                = var.storage_account_id
   role_definition_name = "Storage Blob Data Reader"
@@ -61,10 +67,22 @@ resource "azurerm_role_assignment" "foundry_project_search_index_data_contributo
   principal_id         = var.foundry_project_principal_id
 }
 
+resource "azurerm_role_assignment" "foundry_project_search_service_contributor" {
+  scope                = var.search_service_id
+  role_definition_name = "Search Service Contributor"
+  principal_id         = var.foundry_project_principal_id
+}
+
 resource "azurerm_role_assignment" "foundry_account_search_index_data_contributor" {
   scope                = var.search_service_id
   role_definition_name = "Search Index Data Contributor"
   principal_id         = var.foundry_account_principal_id
+}
+
+resource "azurerm_role_assignment" "foundry_project_foundry_user" {
+  scope                = var.cognitive_account_id
+  role_definition_name = "Foundry User"
+  principal_id         = var.foundry_project_principal_id
 }
 
 # Datasets / Evaluations upload blobs via the project MI on the corpus storage connection.

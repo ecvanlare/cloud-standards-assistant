@@ -1,0 +1,10 @@
+date,agent_version,change_summary,questions,coherence,relevance,response_completeness,notes
+2026-10-01,12,Baseline run A: gpt-5-mini at 10K TPM,62,46.8,21.0,,"Superseded. Judge passed as initialization_parameters.model; tools called on 7/62 rows. Groundedness 98.4% used ground_truth as context, so it was not a retrieval-grounding score."
+2026-10-01,12,Baseline run B: same config,62,46.8,17.7,,"Superseded (same reasons as run A). Noise band vs run A: coherence 0, relevance about 3 points. Groundedness 96.8% (same caveat)."
+2026-10-01,13,Change A: instructions rewrite,8,66.7,16.7,,Discarded. No tool calls on the screen.
+2026-10-01,14,Change B: tool_choice required,0,,,,"Discarded before eval. The agent looped (27 Search calls in App Insights) and hit 429s at 50K TPM. Microsoft tool best practices reserve tool_choice for deterministic control."
+2026-10-01,16,Change C: reasoning_effort high,8,75.0,75.0,,"Discarded. Empirical, not guided: Microsoft's reasoning guide suggests low effort for tool use. Superseded by the model switch. Groundedness 100% (old metric)."
+2026-10-01,15,Evaluator check: v12 config redeployed,8,75.0,75.0,75.0,"Confirms the cloud eval accepts response_completeness, task_adherence and intent_resolution with initialization_parameters.deployment_name."
+2026-10-01,15,"Baseline re-scored: gpt-5-mini at 50K TPM, new evaluators",62,67.7,48.4,46.8,"Baseline for the trend. Capacity 10K to 50K per Microsoft's 30K TPM minimum for agent tools; tools called on 29/62 rows. task_adherence 27.4%, intent_resolution 54.8%."
+2026-10-04,17,Screen: agent model gpt-5.4-mini,8,100.0,87.5,75.0,"task_adherence 62.5%, intent_resolution 87.5%."
+2026-10-04,17,Agent model gpt-5-mini to gpt-5.4-mini,62,100.0,96.8,93.5,"Kept. Foundry Agent Service tool support table lists gpt-5-mini as No for Azure AI Search and OpenAPI, gpt-5.4-mini as Yes. Tools called on 55/62 rows. intent_resolution 96.8%. task_adherence 33.9%: the judge does not receive Azure AI Search tool calls (limited support per Microsoft's agent evaluators page), so it fails cited answers on procedure."

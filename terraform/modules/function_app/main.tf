@@ -41,16 +41,13 @@ resource "azurerm_function_app_flex_consumption" "this" {
   maximum_instance_count = 40
   instance_memory_in_mb  = 2048
 
-  site_config {}
+  site_config {
+    application_insights_connection_string = var.application_insights_connection_string != "" ? var.application_insights_connection_string : null
+  }
 
-  app_settings = merge(
-    {
-      AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
-    },
-    var.application_insights_connection_string != "" ? {
-      APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
-    } : {}
-  )
+  app_settings = {
+    AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
+  }
 
   identity {
     type = "SystemAssigned"

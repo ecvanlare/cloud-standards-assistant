@@ -5,7 +5,7 @@ Content Safety (Foundry RAI filters), instruction-level XPIA / citation / PII gu
 | Doc / script | Purpose |
 |--------------|---------|
 | [`content-safety.md`](content-safety.md) | RAI policy `csa-blocking-medium`, apply steps, blocked-prompt proof |
-| [`scripts/apply-rai-policy.sh`](scripts/apply-rai-policy.sh) | Upsert policy + attach to `gpt-5-mini` deployment |
+| [`scripts/apply-rai-policy.sh`](scripts/apply-rai-policy.sh) | Upsert policy + attach to the agent (`gpt-5.4-mini`) and judge (`gpt-5-mini`) deployments |
 | [`RED-TEAM.md`](RED-TEAM.md) | Injection / citation / leak / PII / filter outcomes |
 | [`../agents/instructions.md`](../agents/instructions.md) | Cite-or-defer, XPIA, PII, tool-path routing |
 | [`../docs/COST-PER-INTERACTION.md`](../docs/COST-PER-INTERACTION.md) | Cost before/after tool-path tiering |
@@ -20,4 +20,4 @@ Content Safety (Foundry RAI filters), instruction-level XPIA / citation / PII gu
 ## Scope
 
 - Uses account **RAI / content filters**, not a separate Azure AI Content Safety resource.
-- No second chat model; “tiering” is Function vs Search routing (see cost doc).
+- Cost “tiering” is Function vs Search routing (see cost doc); the separate agent model is for tool support, not tiering.

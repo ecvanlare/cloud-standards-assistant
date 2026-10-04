@@ -57,6 +57,7 @@ module "foundry" {
   resource_group_name   = module.resource_group.name
   custom_subdomain_name = local.names.ais
   chat_capacity         = var.chat_capacity
+  agent_capacity        = var.agent_capacity
   embedding_capacity    = var.embedding_capacity
   tags                  = local.tags
 }

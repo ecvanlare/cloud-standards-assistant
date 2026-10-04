@@ -14,8 +14,9 @@ OUT_JSON="${2:-}"
 
 export FOUNDRY_PROJECT_ENDPOINT="${FOUNDRY_PROJECT_ENDPOINT}"
 
-python3 -m pip install --quiet --disable-pip-version-check \
-  "azure-identity" "azure-ai-projects>=2.0.0" "openai" >/dev/null
+# shellcheck source=/dev/null
+source "${ROOT}/scripts/_python.sh"
+use_repo_python
 
 args=(
   --project-endpoint "${FOUNDRY_PROJECT_ENDPOINT}"
