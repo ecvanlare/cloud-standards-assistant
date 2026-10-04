@@ -1,2 +1,2 @@
-subscription_id   = "<subscription-id>"
-github_repository = "<owner>/cloud-standards-assistant"
+subscription_id       = "<subscription-id>"
+github_subject_prefix = "repo:<owner>@0/cloud-standards-assistant@0"

@@ -3,9 +3,9 @@ variable "subscription_id" {
   description = "Azure subscription ID. Set in terraform.tfvars (see terraform.tfvars.example)."
 }
 
-variable "github_repository" {
+variable "github_subject_prefix" {
   type        = string
-  description = "GitHub repository as owner/name; used in the federated credential subjects."
+  description = "OIDC subject prefix for the repository: gh api repos/<owner>/<name>/actions/oidc/customization/sub -q .sub_claim_prefix"
 }
 
 variable "environments" {
