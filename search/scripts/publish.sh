@@ -144,12 +144,29 @@ wait_indexer() {
   return 1
 }
 
+# 409 means a run is already in progress; a new indexer starts one as soon as it is created.
+indexer_action() {
+  local name="$1" action="$2" code
+  code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+    -H "Authorization: Bearer $(search_token)" \
+    -H "Content-Length: 0" \
+    "${SEARCH_ENDPOINT}/indexers/${name}/${action}?api-version=${SEARCH_API_VERSION}")"
+  case "${code}" in
+    2??) ;;
+    409) echo "${name} is already running" ;;
+    *)
+      echo "${action} ${name} failed: HTTP ${code}" >&2
+      return 1
+      ;;
+  esac
+}
+
 index() {
   : "${SEARCH_ENDPOINT:?source scripts/tf-env.sh first}"
   for name in corpus-indexer-default corpus-indexer-tuned; do
     echo "Reset and run ${name}"
-    search_call POST "/indexers/${name}/reset" -H "Content-Length: 0" >/dev/null
-    search_call POST "/indexers/${name}/run" -H "Content-Length: 0" >/dev/null
+    indexer_action "${name}" reset
+    indexer_action "${name}" run
   done
   wait_indexer corpus-indexer-default
   wait_indexer corpus-indexer-tuned
